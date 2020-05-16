@@ -132,6 +132,41 @@ class Admin(commands.Cog):
         embed.timestamp = ctx.message.created_at
 
         await ctx.send(embed=embed)
+    
+    @commands.command(help='staff only: see detailed help command')
+    @commands.has_permissions(administrator=True)
+    async def cleanupkick(self, ctx, *, id_post):
+        id_post = id_post + '-'
+        id_build = ''
+        user_ids = []
+        i = 0
+        user = None
+
+        for char in id_post:
+
+            if char == '\n' or char == '-':
+                user_ids.append(id_build)
+                id_build = ''
+            else:
+                id_build = id_build + char
+
+        for user_id in user_ids:
+            user = self.bot.get_user(int(user_id))
+            i = i + 1
+            await ctx.guild.kick(user, reason='Cleanup kick')
+        
+        embed = discord.Embed(description=f'**{i} members were kicked**', color=0xff6464)
+        embed.set_author(name=f'{ctx.author.name}#{ctx.author.discriminator}', icon_url=ctx.author.avatar_url)
+        embed.add_field(name='Last kicked', value=f'{user.name}#{user.discriminator}')
+        embed.add_field(name='ID', value=user.id)
+        embed.timestamp = ctx.message.created_at  
+        
+        try:
+            await ctx.message.delete()
+
+        except discord.Forbidden:
+            pass
+        await ctx.send(embed=embed)
 
     @commands.command(help='Interviewer only: (user 1) (user 2) ...')
     @commands.has_role(INTERVIEWER_ROLE_ID)
