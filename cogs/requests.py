@@ -2,8 +2,7 @@ import os
 import discord
 
 
-from datetime import datetime
-from datetime import timezone
+from datetime import datetime, timezone
 from dotenv import load_dotenv
 from discord.ext import commands
 from utilities import datedifference, formatting
@@ -25,10 +24,23 @@ class Requests(commands.Cog):
 
     @commands.command()
     #@commands.has_permissions(administrator=True)
-    async def test(self, ctx):
+    async def test(self, ctx, *, channel_in):
+        channel = self.bot.get_channel(int(channel_in))
+
+        async for message in channel.history(limit=1):
+            pass
+    
+        embed = message.embeds[0]
+        i = embed.description.find(',')
+        member_id = embed.description[2:(i-1)]
+        if type(embed.thumbnail) == discord.embeds.EmbedProxy:
+            i = 'true'
+        else: 
+            i = 'false'
         
-        await ctx.send(content='Test')
-        await ctx.message.delete()
+        #await ctx.send(content=type(embed.thumbnail))
+        await ctx.send(content=i)
+
 
     @commands.command()
     @commands.has_permissions(administrator=True)
