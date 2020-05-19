@@ -16,16 +16,19 @@ WELCOME_CHANNEL_ID = int(os.getenv('WELCOME_CHANNEL_ID'))
 TURNOVER_CHANNEL_ID = int(os.getenv('TURNOVER_CHANNEL_ID'))
 UNVERIFIED_RULES_ID = int(os.getenv('UNVERIFIED_RULES_ID'))
 MOD_LOG_ID = int(os.getenv('MOD_LOG_ID'))
+BOT_COMMANDS_ID = int(os.getenv('BOT_COMMANDS_ID'))
 
 UNVERIFIED_ROLE_ID = int(os.getenv('UNVERIFIED_ROLE_ID'))
 STAFF_ID = int(os.getenv('STAFF_ROLE_ID'))
 GREETER_ID = int(os.getenv('GREETER_ROLE_ID'))
 JOINER_ROLE_ID = int(os.getenv('JOINER_ROLE_ID'))
 VERIFIED_ROLE_ID = int(os.getenv('VERIFIED_ROLE_ID'))
+SPEED_FINGERS_ID = int(os.getenv('SPEED_FINGERS_ID'))
 
 class Events(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.bot_commands = self.bot.get_channel(BOT_COMMANDS_ID)
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -47,6 +50,26 @@ class Events(commands.Cog):
             await channel.send(f':heart: **__Left:__** {user.mention} aka *{user.name}#{member.discriminator}* __\'{member.id}\'__. We\'ll miss you! :heart:') 
         else:
             await channel.send(f':heart: **__Left:__** {user.mention} aka *{user.name}#{member.discriminator}* __\'{member.id}\'__') 
+
+    @commands.Cog.listener()
+    async def on_message(self, message):
+        #disboard successful bump message
+        if message.author == 302050872383242240 and type(message.embeds[0].thumbnail) == discord.embeds.EmbedProxy:
+            
+            role = message.guild.get_role(SPEED_FINGERS_ID)
+            for member in role.members:
+                await member.remove_roles(roles=role, reason='bump role')
+
+            embed_desc = embed.description.find(',')
+            member_id = embed.description[2:(i-1)]
+            member = message.guild.get_member(member_id)
+            member.add_roles(roles=role, reason='bump role')
+
+
+
+
+        #maybe add a verified status check here?
+        await bot.process_commands(message)
 
 #    @commands.Cog.listener()
 #    async def on_message_delete(self, message):
