@@ -6,9 +6,14 @@ from dotenv import load_dotenv
 
 #env variables
 load_dotenv()
+
+VERIFIED_ROLE_ID = int(os.getenv('VERIFIED_ROLE_ID'))
+
 VERIFYING_RULES = os.getenv('VERIFYING_RULES')
 TRANSGENDER_RULES = os.getenv('TRANSGENDER_RULES')
 AGE_RULES = os.getenv('AGE_RULES')
+BOOST_DM = os.getenv('BOOST_DM')
+
 
 class Rules(commands.Cog):
     def __init__(self, bot):
@@ -41,6 +46,16 @@ class Rules(commands.Cog):
             await ctx.message.delete()
         except discord.Forbidden:
             pass
+
+    @commands.command(help='noarg: prints the nitro dm sent to members')
+    @commands.has_role(VERIFIED_ROLE_ID)
+    async def boost(self, ctx):
+        await ctx.send(content=BOOST_DM, delete_after=120)
+        try:
+            await ctx.message.delete()
+        except discord.Forbidden:
+            pass
+
 
 def setup(bot):
     bot.add_cog(Rules(bot))
