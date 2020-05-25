@@ -238,40 +238,6 @@ class Admin(commands.Cog):
         except discord.HTTPException:
             await ctx.send('The queue is currently empty (probably)')
 
-    @commands.command(help='(number of messages)')
-    @commands.has_permissions(administrator=True)
-    async def clear(self, ctx, num):
-        i = 0
-        num = int(num) + 1 #accounting for the command usage
-        channel = ctx.channel
-
-        if num // 100 >= 1:
-            i = num // 100
-        r = num % 100
-
-        while i > 0:
-            messages = []
-            async for message in channel.history(limit=100):
-                messages.append(message)
-            await ctx.channel.delete_messages(messages)
-            i = i - 1
-
-        messages = []
-        async for message in channel.history(limit=r):
-            messages.append(message)
-        await ctx.channel.delete_messages(messages)
-        
-        embed = discord.Embed(title='Clear', description=f'{num - 1} messages deleted', color=0x64b4ff)
-        embed.set_author(name=f'{ctx.author.name}#{ctx.author.discriminator}', icon_url=ctx.author.avatar_url)
-
-        await ctx.send(embed=embed, delete_after=5)
-
-
-
-
-            
-        
-
 
 def setup(bot):
     bot.add_cog(Admin(bot))

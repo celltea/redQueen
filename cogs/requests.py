@@ -23,7 +23,7 @@ class Requests(commands.Cog):
         self.bot = bot
 
     @commands.command()
-    @commands.has_permissions(administrator=True)
+    #@commands.has_permissions(administrator=True)
     async def test(self, ctx, *, channel_in):
         channel = self.bot.get_channel(int(channel_in))
 
@@ -33,9 +33,13 @@ class Requests(commands.Cog):
         embed = message.embeds[0]
         i = embed.description.find(',')
         member_id = embed.description[2:(i-1)]
+        if type(embed.thumbnail) == discord.embeds.EmbedProxy:
+            i = 'true'
+        else: 
+            i = 'false'
         
         #await ctx.send(content=type(embed.thumbnail))
-        await ctx.send(content=member_id)
+        await ctx.send(content=i)
 
 
     @commands.command()
