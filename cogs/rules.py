@@ -13,6 +13,7 @@ VERIFYING_RULES = os.getenv('VERIFYING_RULES')
 TRANSGENDER_RULES = os.getenv('TRANSGENDER_RULES')
 AGE_RULES = os.getenv('AGE_RULES')
 BOOST_DM = os.getenv('BOOST_DM')
+ADVERTISEMENT = os.getenv('ADVERTISEMENT')
 
 
 class Rules(commands.Cog):
@@ -47,10 +48,19 @@ class Rules(commands.Cog):
         except discord.Forbidden:
             pass
 
-    @commands.command(help='noarg: prints the nitro dm sent to members')
+    @commands.command(help='noarg: prints the nitro dm')
     @commands.has_role(VERIFIED_ROLE_ID)
     async def boost(self, ctx):
         await ctx.send(content=BOOST_DM, delete_after=120)
+        try:
+            await ctx.message.delete()
+        except discord.Forbidden:
+            pass
+    
+    @commands.command(help='noarg: prints the disboard advertisement')
+    @commands.has_role(VERIFIED_ROLE_ID)
+    async def advertisement(self, ctx):
+        await ctx.send(content=ADVERTISEMENT)
         try:
             await ctx.message.delete()
         except discord.Forbidden:
