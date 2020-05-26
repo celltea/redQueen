@@ -279,7 +279,7 @@ class Admin(commands.Cog):
                 self.bot.reload_extension(f"cogs.{name}")
     
     @commands.command(help='no arg: WARNING stops bot')
-    @commands.has_perimssions(administrator=True)
+    @commands.has_permissions(administrator=True)
     async def stop(self, ctx):
         sys.exit()
 
