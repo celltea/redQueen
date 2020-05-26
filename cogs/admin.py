@@ -277,11 +277,14 @@ class Admin(commands.Cog):
             if file.endswith('.py'):
                 name = file[:-3]
                 self.bot.reload_extension(f"cogs.{name}")
+        await ctx.send(content='cogs reloaded')
     
     @commands.command(help='no arg: WARNING stops bot')
     @commands.has_permissions(administrator=True)
     async def stop(self, ctx):
+        await ctx.send(content='shutting down')
         sys.exit()
+
 
 
 def setup(bot):
