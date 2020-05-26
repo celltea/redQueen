@@ -28,7 +28,7 @@ class Boost(commands.Cog):
         log_channel = self.bot.get_channel(int(SAY_LOG_ID))
 
         if ctx.author.permissions_in(channel).send_messages:
-            print(f'{ctx.message.author.name.encode(encoding="ascii", errors="replace")}: {msg.encode(encoding="ascii", errors="replace")}')
+            #print(f'{ctx.message.author.name.encode(encoding="ascii", errors="replace")}: {msg.encode(encoding="ascii", errors="replace")}')
             await log_channel.send(f'__{ctx.message.author.name}:__ {msg} **in** *{channel.name}*')
             await channel.send(f'{msg}')
 
