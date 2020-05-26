@@ -132,7 +132,7 @@ class Events(commands.Cog):
         if booster_role in after.roles and booster_role not in before.roles:
             embed = discord.Embed(title='Server Boost!', description=f'{after.mention} boosted the server!', color=0xe164e1)
             embed.set_thumbnail(url=after.avatar_url)
-            embed.timestamp = ctx.message.created_at
+            embed.timestamp = datetime.utcnow()
 
             general = self.bot.get_channel(GENERAL_ID)
 
@@ -140,6 +140,7 @@ class Events(commands.Cog):
                 await after.create_dm()
                 await after.dm_channel.send(content=BOOST_DM)
             except discord.Forbidden:
+                await general.send(content=BOOST_DM)
                 pass
             await general.send(content=embed)
 
