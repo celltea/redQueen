@@ -15,8 +15,12 @@ from utilities import datedifference, formatting
 load_dotenv()
 COGS = os.getenv('COG_PATH')
 
+WELCOME = os.getenv('WELCOME')
+
 TURNOVER_CHANNEL_ID = int(os.getenv('TURNOVER_CHANNEL_ID'))
 JOIN_CHANNEL_ID = int(os.getenv('JOIN_CHANNEL_ID'))
+BOT_COMMANDS_ID = int(os.getenv('BOT_COMMANDS_ID'))
+GENERAL_ID = int(os.getenv('GENERAL_ID'))
 
 MUTED_ROLE_ID = int(os.getenv('MUTED_ROLE_ID'))
 UNVERIFIED_ROLE_ID = int(os.getenv('UNVERIFIED_ROLE_ID'))
@@ -285,7 +289,35 @@ class Admin(commands.Cog):
         await ctx.send(content='shutting down')
         sys.exit()
 
+    @commands.command(help='Interviewer only: (member)')
+    @commands.has_role(INTERVIEWER_ROLE_ID)
+    async def welcome(self, ctx, *, user_id):
+        try:
+            member = ctx.guild.get_member(int(user_id))
+        except ValueError:
+            member = ctx.guild.get_member(int(formatting.strip(user_id)))
+        
+        unverified_role = ctx.guild.get_role(UNVERIFIED_ROLE_ID)
+        verified_role = ctx.guild.get_role(VERIFIED_ROLE_ID)
+        
+        await member.remove_roles(unverified_role, reason='user verified')
+        await member.add_roles(verified_role, reason='user verified')
 
+        try:
+            await member.create_dm()
+            await member.dm_channel.send(WELCOME)
+        except discord.Forbidden:
+            bot_commands = self.bot.get_channel(BOT_COMMANDS_ID)
+            await bot_commands.send(content=f'{member.mention}\n{WELCOME}')
+
+        general = self.bot.get_channel(GENERAL_ID)
+
+        embed = discord.Embed(description=f'Welcome to the server {member.mention}!', color=0x64b4ff)
+        embed.set_author(name=f'{member.name}#{member.discriminator}', icon_url=member.avatar_url)
+        embed.timestamp = ctx.message.created_at
+
+        await general.send(content='@here', embed=embed)
+        
 
 def setup(bot):
     bot.add_cog(Admin(bot))
