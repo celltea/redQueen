@@ -2,6 +2,7 @@ import discord
 import os 
 import asyncio
 import math
+import sys
 
 from discord.ext import commands
 from dotenv import load_dotenv
@@ -12,6 +13,8 @@ from utilities import datedifference, formatting
 
 #env variables
 load_dotenv()
+COGS = os.getenv('COG_PATH')
+
 TURNOVER_CHANNEL_ID = int(os.getenv('TURNOVER_CHANNEL_ID'))
 JOIN_CHANNEL_ID = int(os.getenv('JOIN_CHANNEL_ID'))
 
@@ -266,11 +269,19 @@ class Admin(commands.Cog):
 
         await ctx.send(embed=embed, delete_after=5)
 
-
-
-
-            
-        
+    #only works on cogs, will not apply any module updates
+    @commands.command(help='no arg: WARNING reloads all cogs')
+    @commands.has_permissions(administrator=True)
+    async def reload(self, ctx):
+        for file in os.listdir(COGS):
+            if file.endswith('.py'):
+                name = file[:-3]
+                self.bot.reload_extension(f"cogs.{name}")
+    
+    @commands.command(help='no arg: WARNING stops bot')
+    @commands.has_perimssions(administrator=True)
+    async def stop(self, ctx):
+        sys.exit()
 
 
 def setup(bot):
