@@ -142,7 +142,7 @@ class Events(commands.Cog):
             except discord.Forbidden:
                 await general.send(content=BOOST_DM)
                 pass
-            await general.send(content=embed)
+            await general.send(embed=embed)
 
     @commands.Cog.listener()
     async def on_member_update(self, before, after):
