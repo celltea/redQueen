@@ -24,19 +24,8 @@ class Requests(commands.Cog):
 
     @commands.command()
     @commands.has_permissions(administrator=True)
-    async def test(self, ctx, *, channel_in):
-        channel = self.bot.get_channel(int(channel_in))
-
-        async for message in channel.history(limit=1):
-            pass
-    
-        embed = message.embeds[0]
-        i = embed.description.find(',')
-        member_id = embed.description[2:(i-1)]
-        
-        #await ctx.send(content=type(embed.thumbnail))
-        await ctx.send(content=member_id)
-
+    async def test(self, ctx):
+        await ctx.send(content='bibbledy bot is giggledy good')
 
     @commands.command()
     @commands.has_permissions(administrator=True)
