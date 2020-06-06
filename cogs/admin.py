@@ -26,6 +26,8 @@ MUTED_ROLE_ID = int(os.getenv('MUTED_ROLE_ID'))
 UNVERIFIED_ROLE_ID = int(os.getenv('UNVERIFIED_ROLE_ID'))
 VERIFIED_ROLE_ID = int(os.getenv('VERIFIED_ROLE_ID'))
 INTERVIEWER_ROLE_ID = int(os.getenv('INTERVIEWER_ROLE_ID'))
+STAFF_ROLE_ID = int(os.getenv('STAFF_ROLE_ID'))
+MARINATED_ID = int(os.getenv('MARINATED_ID'))
 
 class Admin(commands.Cog):
     def __init__(self, bot):
@@ -33,35 +35,41 @@ class Admin(commands.Cog):
         self.queue = ''
         self.queue_position = 0
 
-    @commands.command(help='staff only: (member) (duration in minutes)')
-    @commands.has_permissions(administrator=True)
+    @commands.command(help='Interviewer only: (member) (duration in minutes)')
+    @commands.check_any(commands.has_role(INTERVIEWER_ROLE_ID), commands.has_role(STAFF_ROLE_ID))
     async def timeout(self, ctx, user_id, duration):
         try:
-            member = discord.utils.get(ctx.guild.members, id=int(user_id))
+            member = ctx.guild.get_member(int(user_id))
         except ValueError:
-            member = discord.utils.get(ctx.guild.members, id=int(formatting.strip(user_id)))
+            member = ctx.guild.get_member(int(formatting.strip(user_id)))
 
-        role = ctx.guild.get_role(MUTED_ROLE_ID)
+        verified = ctx.guild.get_role(VERIFIED_ROLE_ID)
+        staff = ctx.guild.get_role(STAFF_ROLE_ID)
+        if staff not in ctx.author.roles and verified in member.roles:
+            await ctx.send(content='Interviewers cannot target Verified users with this command')
+        else:
 
-        mute_embed = discord.Embed(description=f'**{member.mention} was timed out for {duration} minutes**', color=0xff6464)
-        mute_embed.set_author(name=f'{member.name}#{member.discriminator}', icon_url=member.avatar_url)
-        mute_embed.set_thumbnail(url=member.avatar_url)
-        mute_embed.timestamp = ctx.message.created_at
+            role = ctx.guild.get_role(MUTED_ROLE_ID)
 
-        await member.add_roles(role, reason='timeout command: timing out user', atomic=True)
-        await ctx.send(embed=mute_embed)
+            mute_embed = discord.Embed(description=f'**{member.mention} was timed out for {duration} minutes**', color=0xff6464)
+            mute_embed.set_author(name=f'{member.name}#{member.discriminator}', icon_url=member.avatar_url)
+            mute_embed.set_thumbnail(url=member.avatar_url)
+            mute_embed.timestamp = ctx.message.created_at
 
-        await asyncio.sleep(60*int(duration))
+            await member.add_roles(role, reason='timeout command: timing out user', atomic=True)
+            await ctx.send(embed=mute_embed)
 
-        unmute_embed = discord.Embed(description=f'**{member.mention} is no longer timed out**', color=0x64ff64)
-        unmute_embed.set_author(name=f'{member.name}#{member.discriminator}', icon_url=member.avatar_url)
-        unmute_embed.set_thumbnail(url=member.avatar_url)
-        unmute_embed.timestamp = ctx.message.created_at
+            await asyncio.sleep(60*int(duration))
 
-        await member.remove_roles(role, reason='timeout command: removing timeout', atomic=True)
-        await ctx.send(embed=unmute_embed)
+            unmute_embed = discord.Embed(description=f'**{member.mention} is no longer timed out**', color=0x64ff64)
+            unmute_embed.set_author(name=f'{member.name}#{member.discriminator}', icon_url=member.avatar_url)
+            unmute_embed.set_thumbnail(url=member.avatar_url)
+            unmute_embed.timestamp = ctx.message.created_at
 
-    @commands.command(help='staff only: (role)')
+            await member.remove_roles(role, reason='timeout command: removing timeout', atomic=True)
+            await ctx.send(embed=unmute_embed)
+
+    @commands.command(help='Staff only: (role)')
     @commands.has_permissions(administrator=True)
     async def cleanupgen(self, ctx, role_id):
         try:
@@ -80,43 +88,74 @@ class Admin(commands.Cog):
         await ctx.send(content=f'Please see the console. There were {i} user(s)', file=discord.File(fp='cleanup_file.csv', filename='cleanup_file.csv'))
         cleanup_file.close()
     
-    @commands.command(help='staff only: (user) (reason)')
-    @commands.has_permissions(administrator=True)
+    @commands.command(help='Interviewer only: (user) (reason)')
+    @commands.check_any(commands.has_role(INTERVIEWER_ROLE_ID), commands.has_role(STAFF_ROLE_ID))
     async def kick(self, ctx, target, *, reason):
         try:
             user = self.bot.get_user(int(target))
         except ValueError:
             user = self.bot.get_user(int(formatting.strip(target)))
+        
+        verified = ctx.guild.get_role(VERIFIED_ROLE_ID)
+        staff = ctx.guild.get_role(STAFF_ROLE_ID)
+        if staff not in ctx.author.roles and verified in user.roles:
+            await ctx.send(content='Interviewers cannot target Verified users with this command')
+        else:
 
-        embed = discord.Embed(title='Server Kick', color=0xff6464)
-        embed.set_author(name=f'{user.name}#{user.discriminator}', icon_url=user.avatar_url)
-        embed.add_field(name='Target', value=user.mention, inline=True)
-        embed.add_field(name='Moderator', value=ctx.author.mention, inline=True)
-        embed.add_field(name='Reason', value=reason, inline=False)
-        embed.timestamp = ctx.message.created_at
+            embed = discord.Embed(title='Server Kick', color=0xff6464)
+            embed.set_author(name=f'{user.name}#{user.discriminator}', icon_url=user.avatar_url)
+            embed.add_field(name='Target', value=user.mention, inline=True)
+            embed.add_field(name='Moderator', value=ctx.author.mention, inline=True)
+            embed.add_field(name='Reason', value=reason, inline=False)
+            embed.timestamp = ctx.message.created_at
 
-        await ctx.guild.kick(user, reason=reason)
-        await ctx.send(embed=embed) 
+            await ctx.guild.kick(user, reason=reason)
+            await ctx.send(embed=embed) 
 
-    @commands.command(help='staff only: (user) (reason)')
-    @commands.has_permissions(administrator=True)
+    @commands.command(help='Interviewer only: (user) (reason)')
+    @commands.check_any(commands.has_role(INTERVIEWER_ROLE_ID), commands.has_role(STAFF_ROLE_ID))
     async def ban(self, ctx, target, *, reason):
         try:
             user = self.bot.get_user(int(target))
         except ValueError:
-            user = self.bot.get_user(int(formatting.strip(target))) 
+            user = self.bot.get_user(int(formatting.strip(target)))
 
-        embed = discord.Embed(title='Server Ban', color=0xff6464)
-        embed.set_author(name=f'{user.name}#{user.discriminator}', icon_url=user.avatar_url)
-        embed.add_field(name='Target', value=user.mention, inline=True)
-        embed.add_field(name='Moderator', value=ctx.author.mention, inline=True)
-        embed.add_field(name='Reason', value=reason, inline=False)
-        embed.timestamp = ctx.message.created_at
+        verified = ctx.guild.get_role(VERIFIED_ROLE_ID)
+        staff = ctx.guild.get_role(STAFF_ROLE_ID)
+        if staff not in ctx.author.roles and verified in user.roles:
+            await ctx.send(content='Interviewers cannot target Verified users with this command')
+        else: 
 
-        await ctx.guild.ban(user, reason=reason, delete_message_days=0)
-        await ctx.send(embed=embed)
+            embed = discord.Embed(title='Server Ban', color=0xff6464)
+            embed.set_author(name=f'{user.name}#{user.discriminator}', icon_url=user.avatar_url)
+            embed.add_field(name='Target', value=user.mention, inline=True)
+            embed.add_field(name='Moderator', value=ctx.author.mention, inline=True)
+            embed.add_field(name='Reason', value=reason, inline=False)              
+            embed.timestamp = ctx.message.created_at
+
+            await ctx.guild.ban(user, reason=reason, delete_message_days=0)
+            await ctx.send(embed=embed)
     
-    @commands.command(help='staff only: (quantity) (first joiner post to ban) (reason)')
+#    @commands.command(help='Interviewer only: (user)')
+#    @commands.check_any(commands.has_role(INTERVIEWER_ROLE_ID), commands.has_role(STAFF_ROLE_ID))
+#    async def unban(self, ctx, target):
+#        print(target)
+#        try:
+#           user = self.bot.get_user(int(target))
+#        except ValueError:
+#            user = self.bot.get_user(int(formatting.strip(target)))
+#        print(user.id)
+
+#        embed = discord.Embed(title='Server Ban', color=0xff6464)
+#        embed.set_author(name=f'{user.name}#{user.discriminator}', icon_url=user.avatar_url)
+#        embed.add_field(name='Target', value=user.mention, inline=True)
+#        embed.add_field(name='Moderator', value=ctx.author.mention, inline=True)
+#        embed.timestamp = ctx.message.created_at
+
+#        await ctx.guild.unban(user)
+#        await ctx.send(embed=embed)
+    
+    @commands.command(help='Staff only: (quantity) (first joiner post to ban) (reason)')
     @commands.has_permissions(administrator=True)
     async def massban(self, ctx, quantity, start, *, reason):
 
@@ -140,7 +179,7 @@ class Admin(commands.Cog):
 
         await ctx.send(embed=embed)
     
-    @commands.command(help='staff only: see detailed help command')
+    @commands.command(help='Staff only: see detailed help command')
     @commands.has_permissions(administrator=True)
     async def cleanupkick(self, ctx, *, id_post):
         id_post = id_post + '-'
@@ -291,11 +330,11 @@ class Admin(commands.Cog):
 
     @commands.command(help='Interviewer only: (member)')
     @commands.has_role(INTERVIEWER_ROLE_ID)
-    async def welcome(self, ctx, *, user_id):
+    async def welcome(self, ctx, *, target):
         try:
-            member = ctx.guild.get_member(int(user_id))
+            member = ctx.guild.get_member(int(target))
         except ValueError:
-            member = ctx.guild.get_member(int(formatting.strip(user_id)))
+            member = ctx.guild.get_member(int(formatting.strip(target)))
         
         unverified_role = ctx.guild.get_role(UNVERIFIED_ROLE_ID)
         verified_role = ctx.guild.get_role(VERIFIED_ROLE_ID)
@@ -317,7 +356,56 @@ class Admin(commands.Cog):
         embed.timestamp = ctx.message.created_at
 
         await general.send(content='@here', embed=embed)
+
+    @commands.command(help='Marinated only: (member)')
+    @commands.check_any(commands.has_role(INTERVIEWER_ROLE_ID), commands.has_role(STAFF_ROLE_ID), commands.has_role(MARINATED_ID))
+    async def mute(self, ctx, *, target):
+        try:
+            member = ctx.guild.get_member(int(target))
+        except ValueError:
+            member = ctx.guild.get_member(int(formatting.strip(target)))
         
+
+        verified = ctx.guild.get_role(VERIFIED_ROLE_ID)
+        staff = ctx.guild.get_role(STAFF_ROLE_ID)
+        if staff not in ctx.author.roles and verified in member.roles:
+            await ctx.send(content='You cannot target Verified users with your permissions')
+        else: 
+            muted = ctx.guild.get_role(MUTED_ROLE_ID)
+            await member.add_roles(muted)
+
+            embed = discord.Embed(description=f'**{member.mention} has been muted**', color=0xff6464)
+            embed.set_author(name=f'{member.name}#{member.discriminator}', icon_url=member.avatar_url)
+            embed.set_thumbnail(url=member.avatar_url)
+            embed.timestamp = ctx.message.created_at
+
+            await ctx.send(embed=embed)
+
+    @commands.command(help='Marinated only: (member)')
+    @commands.check_any(commands.has_role(INTERVIEWER_ROLE_ID), commands.has_role(STAFF_ROLE_ID), commands.has_role(MARINATED_ID))
+    async def unmute(self, ctx, *, target):
+        try:
+            member = ctx.guild.get_member(int(target))
+        except ValueError:
+            member = ctx.guild.get_member(int(formatting.strip(target)))
+        
+
+        verified = ctx.guild.get_role(VERIFIED_ROLE_ID)
+        staff = ctx.guild.get_role(STAFF_ROLE_ID)
+        if staff not in ctx.author.roles and verified in member.roles:
+            await ctx.send(content='You cannot target Verified users with your permissions')
+        else: 
+            muted = ctx.guild.get_role(MUTED_ROLE_ID)
+            await member.remove_roles(muted)
+
+            embed = discord.Embed(description=f'**{member.mention} has been unmuted**', color=0x64ff641)
+            embed.set_author(name=f'{member.name}#{member.discriminator}', icon_url=member.avatar_url)
+            embed.set_thumbnail(url=member.avatar_url)
+            embed.timestamp = ctx.message.created_at
+
+            await ctx.send(embed=embed)
+
+
 
 def setup(bot):
     bot.add_cog(Admin(bot))
