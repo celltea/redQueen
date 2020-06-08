@@ -3,6 +3,7 @@
 def strip(fancy):
     fancy = fancy[2:-1]
     while not fancy.isdigit():
+        if not fancy:
+            return(None)
         fancy = fancy[1:]
     return(fancy)
-    
