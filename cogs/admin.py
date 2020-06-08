@@ -84,32 +84,32 @@ class Admin(commands.Cog):
         while i < len(member_list):
             cleanup_file.write(f'{member_list[i].name.encode(encoding="ascii", errors="replace")}, "{member_list[i].id}", {member_list[i].joined_at}\n')
             i = i + 1
-
-        await ctx.send(content=f'Please see the console. There were {i} user(s)', file=discord.File(fp='cleanup_file.csv', filename='cleanup_file.csv'))
         cleanup_file.close()
+        await ctx.send(content=f'Please see the console. There were {i} user(s)', file=discord.File(fp='cleanup_file.csv', filename='cleanup_file.csv'))
+        #cleanup_file.close()
     
     @commands.command(help='Interviewer only: (user) (reason)')
     @commands.check_any(commands.has_role(INTERVIEWER_ROLE_ID), commands.has_role(STAFF_ROLE_ID))
     async def kick(self, ctx, target, *, reason):
         try:
-            user = self.bot.get_user(int(target))
+            member = ctx.guild.get_member(int(target))
         except ValueError:
-            user = self.bot.get_user(int(formatting.strip(target)))
+            member = ctx.guild.get_member(int(formatting.strip(target)))
         
         verified = ctx.guild.get_role(VERIFIED_ROLE_ID)
         staff = ctx.guild.get_role(STAFF_ROLE_ID)
-        if staff not in ctx.author.roles and verified in user.roles:
+        if staff not in ctx.author.roles and verified in member.roles:
             await ctx.send(content='Interviewers cannot target Verified users with this command')
         else:
 
             embed = discord.Embed(title='Server Kick', color=0xff6464)
-            embed.set_author(name=f'{user.name}#{user.discriminator}', icon_url=user.avatar_url)
-            embed.add_field(name='Target', value=user.mention, inline=True)
+            embed.set_author(name=f'{member.name}#{member.discriminator}', icon_url=user.avatar_url)
+            embed.add_field(name='Target', value=member.mention, inline=True)
             embed.add_field(name='Moderator', value=ctx.author.mention, inline=True)
             embed.add_field(name='Reason', value=reason, inline=False)
             embed.timestamp = ctx.message.created_at
 
-            await ctx.guild.kick(user, reason=reason)
+            await member.kick(reason=reason)
             await ctx.send(embed=embed) 
 
     @commands.command(help='Interviewer only: (user) (reason)')
@@ -120,9 +120,15 @@ class Admin(commands.Cog):
         except ValueError:
             user = self.bot.get_user(int(formatting.strip(target)))
 
+        try:
+            member = ctx.guild.get_member(int(target))
+        except ValueError:
+            member = ctx.guild.get_member(int(formatting.strip(target)))
+
+    
         verified = ctx.guild.get_role(VERIFIED_ROLE_ID)
         staff = ctx.guild.get_role(STAFF_ROLE_ID)
-        if staff not in ctx.author.roles and verified in user.roles:
+        if staff not in ctx.author.roles and verified in member.roles:
             await ctx.send(content='Interviewers cannot target Verified users with this command')
         else: 
 
@@ -398,7 +404,7 @@ class Admin(commands.Cog):
             muted = ctx.guild.get_role(MUTED_ROLE_ID)
             await member.remove_roles(muted)
 
-            embed = discord.Embed(description=f'**{member.mention} has been unmuted**', color=0x64ff641)
+            embed = discord.Embed(description=f'**{member.mention} has been unmuted**', color=0x64ff64)
             embed.set_author(name=f'{member.name}#{member.discriminator}', icon_url=member.avatar_url)
             embed.set_thumbnail(url=member.avatar_url)
             embed.timestamp = ctx.message.created_at
