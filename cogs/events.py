@@ -33,6 +33,7 @@ class Events(commands.Cog):
     def __init__(self, bot):
         self.bot = bot 
         self.bot_commands = self.bot.get_channel(BOT_COMMANDS_ID)
+        self.tom = self.bot.get_user(718545043312607232)
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -113,9 +114,14 @@ class Events(commands.Cog):
                 difference = datetime.utcnow() - after.joined_at
                 elapsed_seconds = difference.total_seconds()
 
-                if elapsed_seconds <= 15:
+                if elapsed_seconds < 16:
                     await after.ban(delete_message_days=0)
                     await welcome_channel.send(f'**{after.name}#{after.discriminator}** has been banned from the server for spending *{elapsed_time}* reading the rules.')
+                    message = None
+                    async for message in welcome_channel.history(limit=1):
+                        pass
+                    emote = self.bot.get_emoji(720091197594534001)
+                    await message.add_reaction(emote)
                     try:
                         await after.create_dm()
                         await after.dm_channel.send(f'You have automatically been banned from the server for spending too little time reading the rules.')
@@ -144,10 +150,17 @@ class Events(commands.Cog):
                 pass
             await general.send(embed=embed)
 
+    async def tom_status_upd(self, before, after):
+        if after.id == 718545043312607232 and type(after.activity) == discord.activity.CustomActivity and before.activity != after.activity:
+            member = after.guild.get_member(192769057722728450)
+            await member.create_dm()
+            await member.dm_channel.send(content=f'Status updated to: {str(after.activity)}')
+
     @commands.Cog.listener()
     async def on_member_update(self, before, after):
         await Events.unv_upd(self, before, after)
         await Events.boost_upd(self, before, after)
+        await Events.tom_status_upd(self, before, after)
 
     #catching updates... this is gonna suck
     @commands.Cog.listener()
