@@ -14,9 +14,9 @@ class Info(commands.Cog):
         self.bot = bot
 
 
-    @commands.command(help='(member)')
+    @commands.command(aliases=['userinfo'], help='(member)')
     @commands.has_role(VERIFIED_ROLE_ID)
-    async def userinfo(self, ctx, target):
+    async def memberinfo(self, ctx, target):
         try:
             member = ctx.guild.get_member(int(target))
         except ValueError:
@@ -92,7 +92,7 @@ class Info(commands.Cog):
         except discord.HTTPException:
             await ctx.send(f'**Error:** Too many users have this role to send the message through discord. Consider using ,cleanupgen instead')
 
-    @commands.command(aliases=['av'], help='(user)')
+    @commands.command(aliases=['av', 'pfp'], help='(user)')
     @commands.has_role(VERIFIED_ROLE_ID)
     async def avatar(self, ctx, user_id):
         try:
