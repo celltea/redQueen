@@ -98,6 +98,11 @@ class Events(commands.Cog):
 #        else:
 #            pass
 
+    async def anna_upd(self, before, after):
+        if after.id == 583861014794207237:
+            if before.nick != after.nick and after.nick != 'Bananalina':
+                await after.edit(nick='Bananalina')
+
     async def unv_upd(self, before, after):
         joiner_role = after.guild.get_role(JOINER_ROLE_ID)
         unverified_role = after.guild.get_role(UNVERIFIED_ROLE_ID)
@@ -160,6 +165,7 @@ class Events(commands.Cog):
     async def on_member_update(self, before, after):
         await Events.unv_upd(self, before, after)
         await Events.boost_upd(self, before, after)
+        await Events.anna_upd(self, before, after)
         await Events.tom_status_upd(self, before, after)
 
     #catching updates... this is gonna suck
