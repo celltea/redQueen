@@ -51,7 +51,7 @@ class Admin(commands.Cog):
 
             role = ctx.guild.get_role(MUTED_ROLE_ID)
 
-            mute_embed = discord.Embed(description=f'**{member.mention} was timed out for {duration} minutes**', color=0xff6464)
+            mute_embed = discord.Embed(description=f'**{member.mention} was timed out for {duration} minute(s)**', color=0xff6464)
             mute_embed.set_author(name=f'{member.name}#{member.discriminator}', icon_url=member.avatar_url)
             mute_embed.set_thumbnail(url=member.avatar_url)
             mute_embed.timestamp = ctx.message.created_at
@@ -410,8 +410,7 @@ class Admin(commands.Cog):
             embed.timestamp = ctx.message.created_at
 
             await ctx.send(embed=embed)
-
-
+            
 
 def setup(bot):
     bot.add_cog(Admin(bot))
