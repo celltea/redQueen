@@ -21,7 +21,7 @@ class Fun(commands.Cog):
         self.rps_channel = None
         self.rps_state = 0
 
-    #this feels so messy I'm so disappointed with it
+    #use subcommands with this later on to make it crisp
     @commands.command(help='(start/choose) (verified user)')
     #@commands.has_role(VERIFIED_ROLE_ID) #this breaks the dm-aspect of the game
     async def rps(self, ctx, state, *, selection=None):
@@ -127,7 +127,77 @@ class Fun(commands.Cog):
             self.input1 = None
             self.input2 = None
             self.rps_channel = None
-            
+
+    @commands.command(help='(user)')
+    @commands.has_role(VERIFIED_ROLE_ID)
+    async def ship(self, ctx, target1, target2=None):
+        try:
+            member2 = ctx.guild.get_member(int(target1))
+        except ValueError:
+            member2 = ctx.guild.get_member(int(formatting.strip(target1)))
+
+        #checking to see if author is implied as a target
+        if target2:
+            try:
+                member1 = ctx.guild.get_member(int(target2))
+            except ValueError:
+                member1 = ctx.guild.get_member(int(formatting.strip(target2)))
+
+        else:
+            member1 = ctx.author
+
+        num1 = member1.id%1000 #command user
+        num2 = member2.id%1000 #target
+        comp_num = (num1 + num2 - 40)%101
+        bars_ref = comp_num//10
+        bars_on = bars_ref*'<a:baron:725816473704202242>'
+        bars_off = (10-bars_ref)*'<a:baroff:725816609176027635>'
+        status = None
+
+        #this seems sloppy, I think there's a better way to do this
+        while True:
+            if comp_num == 100:
+                status = 'You\'re made for eachother <a:true_love:725827494585827481>'
+            if comp_num >= 90:
+                status = 'True love :heart_eyes:'
+                break
+            if comp_num >= 80:
+                status = 'Wew is it hot in here? :fire:'
+                break
+            if comp_num >= 70:
+                status = 'Just 2 gals being pals :wink:'
+                break
+            if comp_num == 69:
+                status = 'Nice <a:okhandspin:644684375287660564>'
+                break
+            if comp_num >= 60:
+                status = 'Budding potential :heart:'
+                break
+            if comp_num >= 50:
+                status = 'Besties :smile:'
+                break
+            if comp_num >= 40:
+                status = 'Lets just be friends :eyes:'
+                break
+            if comp_num >= 30:
+                status = 'It\'s not you it\'s me... :eyes:'
+                break
+            if comp_num >= 20:
+                status = 'Prepare to get ghosted :ghost:'
+                break
+            if comp_num >= 10:
+                status = 'Bitter rivals :angry:'
+                break
+            if comp_num >= 1:
+                status = 'Sworn enemies :right_facing_fist::left_facing_fist: '
+                break
+            else:
+                status = 'She\'s practically your sister! :nauseated_face:'
+                break
+
+        embed = discord.Embed(description=f'**{comp_num}%** {bars_on}{bars_off} {status}', color=0xe484dc)
+
+        await ctx.send(content=f'{member1.mention} and {member2.mention} sitting in a tree...', embed=embed)
 
 
 
