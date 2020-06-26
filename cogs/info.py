@@ -28,7 +28,7 @@ class Info(commands.Cog):
         try:
             time_since_nitro = datedifference.date_difference(member.premium_since, datetime.utcnow())
         except TypeError:
-            time_since_nitro = "None as of current"
+            time_since_nitro = "None"
 
         for role in member.roles:
             roles = roles + f'{role.mention}, '
@@ -40,6 +40,11 @@ class Info(commands.Cog):
         embed.add_field(name='User', value=f'**{member.name}#{member.discriminator}**', inline=True)
         embed.add_field(name='Nickname', value=member.display_name, inline=True)
         embed.add_field(name='ID', value=member.id, inline=True)
+        try:
+            i = str(member.activity.type).index('.')
+            embed.add_field(name='Status', value=f'{str(member.activity.type)[i+1:]} **--** {member.activity.name}')
+        except AttributeError:
+            embed.add_field(name='Status', value='None')
         embed.add_field(name='Created', value=f'**__{time_since_created}__** - {member.created_at}', inline=False)
         embed.add_field(name='Joined', value=f'**__{time_since_joined}__** - {member.joined_at}', inline=False)
         embed.add_field(name='Nitro', value=f'**__{time_since_nitro}__** - {member.premium_since}', inline=False)
