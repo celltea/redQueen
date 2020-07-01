@@ -112,6 +112,23 @@ class Info(commands.Cog):
 
         await ctx.send(embed=embed)
 
+    @commands.command(help=('note: implied target is message above command call, at the moment this command only works on the first reaction (not sure if that means the first in-client or the first by some arbitrary measure)'))
+    @commands.has_role(VERIFIED_ROLE_ID)
+    async def whoreact(self, ctx):
+        react_message = None
+        async for message in ctx.channel.history(limit=2):
+            if ctx.message != message:
+                react_message = message
+            pass
+        
+        message = '```'
+        i = 1
+        async for user in react_message.reactions[0].users():
+            message = message + f'{i}. {user.name}#{user.discriminator}\n'
+            i += 1
+        message = message + '```'
+        
+        await ctx.send(content=message)
 
 
 def setup(bot):
