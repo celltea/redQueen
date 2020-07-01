@@ -103,7 +103,7 @@ class Admin(commands.Cog):
         else:
 
             embed = discord.Embed(title='Server Kick', color=0xff6464)
-            embed.set_author(name=f'{member.name}#{member.discriminator}', icon_url=user.avatar_url)
+            embed.set_author(name=f'{member.name}#{member.discriminator}', icon_url=member.avatar_url)
             embed.add_field(name='Target', value=member.mention, inline=True)
             embed.add_field(name='Moderator', value=ctx.author.mention, inline=True)
             embed.add_field(name='Reason', value=reason, inline=False)
@@ -133,7 +133,7 @@ class Admin(commands.Cog):
         else: 
 
             embed = discord.Embed(title='Server Ban', color=0xff6464)
-            embed.set_author(name=f'{user.name}#{user.discriminator}', icon_url=user.avatar_url)
+            embed.set_author(name=f'{member.name}#{member.discriminator}', icon_url=member.avatar_url)
             embed.add_field(name='Target', value=user.mention, inline=True)
             embed.add_field(name='Moderator', value=ctx.author.mention, inline=True)
             embed.add_field(name='Reason', value=reason, inline=False)              
