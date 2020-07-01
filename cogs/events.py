@@ -1,13 +1,13 @@
 import discord
 import os
 import asyncio
-import math
 
 from discord.ext.commands import errors
 from discord.ext import commands
 from dotenv import load_dotenv
 from datetime import datetime
 from utilities import datedifference
+from random import randint
 
 #env variables
 load_dotenv()
@@ -56,10 +56,9 @@ class Events(commands.Cog):
         else:
             await channel.send(f':heart: **__Left:__** {user.mention} aka *{user.name}#{member.discriminator}* __\'{member.id}\'__') 
 
-    @commands.Cog.listener()
-    async def on_message(self, message):
 
-        #disboard successful bump message
+    async def disboard_onm(self, message):
+    #disboard successful bump message
         if message.author.id == 302050872383242240 and str(message.embeds[0].color) == '#24b7b7' and ':thumbsup:' in message.embeds[0].description: 
         #type(message.embeds[0].thumbnail) == discord.embeds.EmbedProxy
         
@@ -78,7 +77,18 @@ class Events(commands.Cog):
         #maybe add a verified status check here?
         #await self.bot.process_commands(message)
 
+    async def anna_onm(self, message):
+        if message.author.id == 583861014794207237:
+            if randint(1, 20) == 1:
+                emote = self.bot.get_emoji(726170090026041456)
+                await message.add_reaction(emote)
+                  
 
+    @commands.Cog.listener()
+    async def on_message(self, message):
+        await Events.disboard_onm(self, message)
+        await Events.anna_onm(self, message)
+        
 
 #    @commands.Cog.listener()
 #    async def on_message_delete(self, message):
@@ -104,6 +114,7 @@ class Events(commands.Cog):
                 await after.edit(nick='Bananalina')
 
     async def unv_upd(self, before, after):
+        timestamp_now = datetime.utcnow()
         joiner_role = after.guild.get_role(JOINER_ROLE_ID)
         unverified_role = after.guild.get_role(UNVERIFIED_ROLE_ID)
         #checking when zira removes the joiner role to send the welcome message
@@ -115,8 +126,8 @@ class Events(commands.Cog):
                 welcome_channel = self.bot.get_channel(WELCOME_CHANNEL_ID)
                 unverified_rules = self.bot.get_channel(UNVERIFIED_RULES_ID)
                 
-                elapsed_time = datedifference.date_difference(after.joined_at, datetime.utcnow())
-                difference = datetime.utcnow() - after.joined_at
+                elapsed_time = datedifference.date_difference(after.joined_at, timestamp_now)
+                difference = timestamp_now - after.joined_at
                 elapsed_seconds = difference.total_seconds()
 
                 if elapsed_seconds < 16:
@@ -156,7 +167,7 @@ class Events(commands.Cog):
             await general.send(embed=embed)
 
     async def tom_status_upd(self, before, after):
-        if after.id == 718545043312607232 and type(after.activity) == discord.activity.CustomActivity and before.activity != after.activity:
+        if after.id == 721134871501865029 and type(after.activity) == discord.activity.CustomActivity and before.activity != after.activity:
             member = after.guild.get_member(192769057722728450)
             await member.create_dm()
             await member.dm_channel.send(content=f'Status updated to: {str(after.activity)}')
