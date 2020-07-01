@@ -20,6 +20,7 @@ class Fun(commands.Cog):
         self.input2 = None
         self.rps_channel = None
         self.rps_state = 0
+        self.set = 0
 
     #use subcommands with this later on to make it crisp
     @commands.command(help='(start/choose) (verified user)')
@@ -196,12 +197,50 @@ class Fun(commands.Cog):
                 break
 
         embed = discord.Embed(description=f'**{comp_num}%** {bars_on}{bars_off} {status}', color=0xe484dc)
-
         await ctx.send(content=f'{member1.mention} and {member2.mention} sitting in a tree...', embed=embed)
 
+    @commands.command(help='(num of dice)d(faces on die) + (modifiers)')
+    @commands.has_role(VERIFIED_ROLE_ID)
+    async def roll(self, ctx, *, roll):
+        roll = roll.lower()
+        split = roll.index('d')
+        modifier = False
+        dice_num = int(roll[:split])
 
+        if dice_num > 100:
+            await ctx.send(content='Thats way too many dice. Please roll a smaller amount')
+            return
 
+        try:
+            dice_faces = int(roll[split+1:roll.index('+')-1])
+            modifier = int(roll[roll.index('+')+1:])
+        except ValueError:
+            dice_faces = int(roll[split+1:])
 
+        if dice_faces > 10000:
+            await ctx.send(content='I don\'t think they make die with that many sides. Please use a smaller amount.')
+            return
+            
+        roll_results = []
+        message = ''
+
+        while dice_num > 0:
+            roll = randint(1, dice_faces)
+            roll_results.append(roll)
+            message = message + f'[ **{roll}** ]  + '
+            dice_num -= 1
+        message = message [:-3]
+
+        if modifier:
+            roll_results.append(modifier)
+            message = message + f'+ {modifier}'
+
+        results = 0
+        for roll in roll_results:
+            results += roll
+        
+        message = message + f'\n\n__Total__ = {results}'
+        await ctx.send(content=message)
 
 def setup(bot):
     bot.add_cog(Fun(bot))
