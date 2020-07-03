@@ -100,14 +100,20 @@ class Admin(commands.Cog):
         staff = ctx.guild.get_role(STAFF_ROLE_ID)
         if staff not in ctx.author.roles and verified in member.roles:
             await ctx.send(content='Interviewers cannot target Verified users with this command')
-        else:
 
+        else:
             embed = discord.Embed(title='Server Kick', color=0xff6464)
             embed.set_author(name=f'{member.name}#{member.discriminator}', icon_url=member.avatar_url)
             embed.add_field(name='Target', value=member.mention, inline=True)
             embed.add_field(name='Moderator', value=ctx.author.mention, inline=True)
             embed.add_field(name='Reason', value=reason, inline=False)
             embed.timestamp = ctx.message.created_at
+            
+            try:
+                await member.create_dm()
+                await member.dm_channel.send(content=f'You have been kicked from {ctx.guild.name} with reason: __{reason}__')
+            except discord.Forbidden:
+                embed.add_field(value='Unable to DM target', inline=True)
 
             await member.kick(reason=reason)
             await ctx.send(embed=embed) 
@@ -133,7 +139,7 @@ class Admin(commands.Cog):
         else: 
 
             embed = discord.Embed(title='Server Ban', color=0xff6464)
-            embed.set_author(name=f'{member.name}#{member.discriminator}', icon_url=member.avatar_url)
+            embed.set_author(name=f'{user.name}#{user.discriminator}', icon_url=user.avatar_url)
             embed.add_field(name='Target', value=user.mention, inline=True)
             embed.add_field(name='Moderator', value=ctx.author.mention, inline=True)
             embed.add_field(name='Reason', value=reason, inline=False)              
