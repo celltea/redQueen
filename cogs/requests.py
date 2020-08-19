@@ -24,8 +24,22 @@ class Requests(commands.Cog):
 
     @commands.command()
     @commands.has_permissions(administrator=True)
-    async def test(self, ctx):
-        await ctx.send(content='bibbledy bot is giggledy good')
+    async def test(self, ctx, target):
+        try:
+            member2_name = ctx.guild.get_member(int(target)).name
+        except ValueError:
+            try:
+                member2_name = ctx.guild.get_member(int(formatting.strip(target))).name
+            except TypeError:
+                member2_name = f'**{target}**' 
+        
+        #if type(member2.name) == None:
+        #    member2_name = f'**{target}**'
+        #else:
+        #    member2_name = member2.name
+        
+        await ctx.send(content=member2_name)
+        await ctx.send(content=type(member2.name))
 
     @commands.command()
     @commands.has_permissions(administrator=True)
@@ -41,7 +55,6 @@ class Requests(commands.Cog):
 
         await ctx.send(embed=embed)
  
-        
     @commands.command(help='noarg: a simple way to tell if the bot is online')
     @commands.has_role(VERIFIED_ROLE_ID)
     async def ping(self, ctx):
@@ -56,6 +69,16 @@ class Requests(commands.Cog):
     @commands.has_role(VERIFIED_ROLE_ID)
     async def alice(self, ctx):
         await ctx.send('You\'re all going to die down here.')
+
+    @commands.command(help='noarg: cat\'s request')
+    @commands.has_role(VERIFIED_ROLE_ID)
+    async def howlong(self, ctx):
+        await ctx.send('too long')
+
+    @commands.command(help='noarg: annalina\'s request')
+    @commands.has_role(VERIFIED_ROLE_ID)
+    async def serverowner(self, ctx):
+        await ctx.message.delete(delay=1)
 
     #negative mod action
     @commands.command(help='no arg')
