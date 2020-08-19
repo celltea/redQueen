@@ -242,5 +242,74 @@ class Fun(commands.Cog):
         message = message + f'\n\n__Total__ = {results}'
         await ctx.send(content=message)
 
+    @commands.command(help='(user)')
+    @commands.has_role(VERIFIED_ROLE_ID)
+    async def deathbattle(self, ctx, *, target):
+        try:
+            member2_name = f'**{ctx.guild.get_member(int(target)).name}'
+        except ValueError:
+            try:
+                member2_name = f'**{ctx.guild.get_member(int(formatting.strip(target))).name}**'
+            except TypeError:
+                member2_name = f'**{target}**' 
+        
+        member1_name = ctx.author.name
+
+        hp1_t = 100
+        hp2_t = 100
+
+        current_hp = [hp1_t, hp2_t] # [0] is member1, [1] is member2
+
+        embed = discord.Embed(description=f'{member1_name} __vs__ {member2.name}', color=0x64b4ff)
+        embed.add_field(value='Ready?')
+        embed.add_field(name=member1_name, inline=False) #member1 index1
+        embed.add_field(name=member2_name, inline=False) #member2 index2
+        
+        message = await ctx.send(embed=embed)
+
+        while current_hp[0] > 0 and current_hp[1] > 0:
+            damage = rantint(1,40)
+
+    @commands.command(aliases=['whatsthis', 'owo'], help='no arg: requested by Naaz')
+    @commands.has_role(VERIFIED_ROLE_ID)
+    async def naazify(self, ctx):
+        async for message in ctx.channel.history(limit=2):
+            if message.id != ctx.message.id:
+                break   #of the two messages, one being the function call and the other being the message above it, we choose whichever is not our function call.  
+        emoteList = ['┌[ ◔ ͜ ʖ ◔ ]┐', 'ヽ༼ ் ▽ ் ༽╯', '୧[ * ಡ ▽ ಡ * ]୨', 'ヽ༼ ͠ ͠° ͜ʖ ͠ ͠° ༽ﾉ', '(✿ ◕‿◕)', 'ᕕ( ՞ ᗜ ՞ )ᕗ', 's( ^ ‿ ^)-b', 'ლ ( ◕  ᗜ  ◕ ) ლ', '╰(◕ᗜ◕)╯', '░ ∗ ◕ ں ◕ ∗ ░', '(⊹つ•۝•⊹)つ', '(∩╹□╹∩)', '(✿ ◕ᗜ◕)━♫.*･｡ﾟ', 'ʕ ⊃･ ◡ ･ ʔ⊃', '╭(◕◕ ◉෴◉ ◕◕)╮', '♪ヽ( ⌒o⌒)人(⌒-⌒ )v ♪', '╰(✿˙ᗜ˙)੭━☆ﾟ.*･｡ﾟ', '(ง ͡ʘ ͜ʖ ͡ʘ)ง', '乁༼☯‿☯✿༽ㄏ', 'c(ˊᗜˋ*c)']
+        seed1 = randint(0, len(emoteList) - 1) #string multiplier to determine whether or not start multiplying
+        seed2 = randint(0, len(emoteList) - 1)
+        m = list(message.content)
+
+        #building the string
+        leadFace = f'{emoteList[seed1]} '
+
+        i = 0
+        while i < len(m): #replacing necessary characters with l's and w's
+            if m[i] == 'l' or m[i] == 'r':
+                m[i] = 'w'
+            elif m[i] == 'L' or m[i] == 'R':
+                m[i] = 'W'
+            try:
+                if m[i-1] == ' ' and randint(0,9) == 0:
+                    m.insert(i, m[i] + '-')
+            except IndexError:
+                pass
+            i = i + 1
+        
+        stut = (m[0] + '-')*(seed1 % 2)
+        trailFace = f' {emoteList[seed2]}'
+        
+        body = ''
+        i = 0
+        while i < len(m):
+            body = body + m[i]
+            i = i + 1
+
+        sO = f'**{message.author}**: {leadFace}{stut}{body}{trailFace}' 
+
+        await ctx.send(content=sO)
+
+
 def setup(bot):
     bot.add_cog(Fun(bot))
