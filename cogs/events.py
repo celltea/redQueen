@@ -110,8 +110,8 @@ class Events(commands.Cog):
 
     async def anna_upd(self, before, after):
         if after.id == 583861014794207237:
-            if before.nick != after.nick and after.nick != 'Bananalina':
-                await after.edit(nick='Bananalina')
+            if before.nick != after.nick and after.nick != 'Annalina':
+                await after.edit(nick='Annalina')
 
     async def unv_upd(self, before, after):
         timestamp_now = datetime.utcnow()
@@ -166,18 +166,11 @@ class Events(commands.Cog):
                 pass
             await general.send(embed=embed)
 
-    async def tom_status_upd(self, before, after):
-        if after.id == 721134871501865029 and type(after.activity) == discord.activity.CustomActivity and before.activity != after.activity:
-            member = after.guild.get_member(192769057722728450)
-            await member.create_dm()
-            await member.dm_channel.send(content=f'Status updated to: {str(after.activity)}')
-
     @commands.Cog.listener()
     async def on_member_update(self, before, after):
         await Events.unv_upd(self, before, after)
         await Events.boost_upd(self, before, after)
-        await Events.anna_upd(self, before, after)
-        await Events.tom_status_upd(self, before, after)
+        #await Events.anna_upd(self, before, after)
 
     #catching updates... this is gonna suck
     @commands.Cog.listener()
