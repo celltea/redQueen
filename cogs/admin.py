@@ -118,6 +118,7 @@ class Admin(commands.Cog):
             await member.kick(reason=reason)
             await ctx.send(embed=embed) 
 
+    #temporarily gross looking code, I'll clean it up later, I broke it with my last update so this is a temporary fix
     @commands.command(help='Interviewer only: (user) (reason)')
     @commands.check_any(commands.has_role(INTERVIEWER_ROLE_ID), commands.has_role(STAFF_ROLE_ID))
     async def ban(self, ctx, target, *, reason):
@@ -130,23 +131,24 @@ class Admin(commands.Cog):
             member = ctx.guild.get_member(int(target))
         except ValueError:
             member = ctx.guild.get_member(int(formatting.strip(target)))
-
     
         verified = ctx.guild.get_role(VERIFIED_ROLE_ID)
         staff = ctx.guild.get_role(STAFF_ROLE_ID)
-        if staff not in ctx.author.roles and verified in member.roles:
-            await ctx.send(content='Interviewers cannot target Verified users with this command')
-        else: 
+        try:
+            if staff not in ctx.author.roles and verified in member.roles:
+                await ctx.send(content='Interviewers cannot target Verified users with this command')
+                return
+        except AttributeError:
+            pass  
+        embed = discord.Embed(title='Server Ban', color=0xff6464)
+        embed.set_author(name=f'{user.name}#{user.discriminator}', icon_url=user.avatar_url)
+        embed.add_field(name='Target', value=user.mention, inline=True)
+        embed.add_field(name='Moderator', value=ctx.author.mention, inline=True)
+        embed.add_field(name='Reason', value=reason, inline=False)              
+        embed.timestamp = ctx.message.created_at
 
-            embed = discord.Embed(title='Server Ban', color=0xff6464)
-            embed.set_author(name=f'{user.name}#{user.discriminator}', icon_url=user.avatar_url)
-            embed.add_field(name='Target', value=user.mention, inline=True)
-            embed.add_field(name='Moderator', value=ctx.author.mention, inline=True)
-            embed.add_field(name='Reason', value=reason, inline=False)              
-            embed.timestamp = ctx.message.created_at
-
-            await ctx.guild.ban(user, reason=reason, delete_message_days=0)
-            await ctx.send(embed=embed)
+        await ctx.guild.ban(user, reason=reason, delete_message_days=0)
+        await ctx.send(embed=embed)
     
 #    @commands.command(help='Interviewer only: (user)')
 #    @commands.check_any(commands.has_role(INTERVIEWER_ROLE_ID), commands.has_role(STAFF_ROLE_ID))
