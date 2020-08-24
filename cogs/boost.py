@@ -28,9 +28,13 @@ class Boost(commands.Cog):
         log_channel = self.bot.get_channel(int(SAY_LOG_ID))
 
         if ctx.author.permissions_in(channel).send_messages:
-            #print(f'{ctx.message.author.name.encode(encoding="ascii", errors="replace")}: {msg.encode(encoding="ascii", errors="replace")}')
-            await log_channel.send(f'__{ctx.message.author.name}:__ {msg} **in** *{channel.name}*')
-            await channel.send(f'{msg}')
+            if len(ctx.message.role_mentions) != 0 or '@everyone' in msg or '@here' in msg: #checking if there are any mentions in the message
+                await ctx.send(content='You cannot mention roles with this command')
+                return
+            else:
+                print('@here' in msg + 'does this work?')
+                await log_channel.send(f'__{ctx.message.author.name}:__ {msg} **in** *{channel.name}*')
+                await channel.send(f'{msg}')
 
             try:
                 await ctx.message.delete()
