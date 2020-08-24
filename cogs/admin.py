@@ -420,5 +420,37 @@ class Admin(commands.Cog):
             await ctx.send(embed=embed)
             
 
+    async def cleanUpBlock(self, ctx, message_id, channel):
+        message = await channel.fetch_message(int(message_id))
+        for reaction in message.reactions:
+            async for user in reaction.users():
+                if type(user) == discord.User:
+                    await reaction.remove(user)
+
+
+    @commands.command(help='Staff only: (# of posts)')
+    @commands.has_role(STAFF_ROLE_ID)
+    async def cleanuproles_channel(self, ctx, channel, num):
+        try:
+            channel = self.bot.get_channel(int(channel))
+        except ValueError:
+            channel = ctx.guild.get_member(int(formatting.strip(channel)))
+
+        async for message in channel.history(limit=int(num)):
+            await Admin.cleanUpBlock(self, ctx, message.id, channel)
+
+    @commands.command(help='Staff only: (# of posts)')
+    @commands.has_role(STAFF_ROLE_ID)
+    async def cleanuproles_message(self, ctx, channel, message):
+        try:
+            channel = self.bot.get_channel(int(channel))
+        except ValueError:
+            channel = ctx.guild.get_member(int(formatting.strip(channel)))
+
+        await Admin.cleanUpBlock(self, ctx, message, channel)
+        
+
+    
+
 def setup(bot):
     bot.add_cog(Admin(bot))
