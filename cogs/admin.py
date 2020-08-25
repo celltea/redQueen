@@ -9,8 +9,6 @@ from dotenv import load_dotenv
 from datetime import datetime, timedelta
 from utilities import datedifference, formatting
 
-
-
 #env variables
 load_dotenv()
 COGS = os.getenv('COG_PATH')
@@ -86,11 +84,10 @@ class Admin(commands.Cog):
             i = i + 1
         cleanup_file.close()
         await ctx.send(content=f'Please see the console. There were {i} user(s)', file=discord.File(fp='cleanup_file.csv', filename='cleanup_file.csv'))
-        #cleanup_file.close()
     
     @commands.command(help='Interviewer only: (user) (reason)')
     @commands.check_any(commands.has_role(INTERVIEWER_ROLE_ID), commands.has_role(STAFF_ROLE_ID))
-    async def kick(self, ctx, target, *, reason):
+    async def kick(self, ctx, target, *, reason = None):
         try:
             member = ctx.guild.get_member(int(target))
         except ValueError:
@@ -106,7 +103,6 @@ class Admin(commands.Cog):
             embed.set_author(name=f'{member.name}#{member.discriminator}', icon_url=member.avatar_url)
             embed.add_field(name='Target', value=member.mention, inline=True)
             embed.add_field(name='Moderator', value=ctx.author.mention, inline=True)
-            embed.add_field(name='Reason', value=reason, inline=False)
             embed.timestamp = ctx.message.created_at
             
             try:
@@ -115,13 +111,20 @@ class Admin(commands.Cog):
             except discord.Forbidden:
                 embed.add_field(value='Unable to DM target', inline=True)
 
+            if reason:
+                embed.add_field(name='Reason', value=reason, inline=False)
+                await member.kick(reason=reason)
+            else:
+                embed.add_field(name='Reason', value='none', inline=False)
+                await member.kick(reason='none')
+
             await member.kick(reason=reason)
             await ctx.send(embed=embed) 
 
     #temporarily gross looking code, I'll clean it up later, I broke it with my last update so this is a temporary fix
     @commands.command(help='Interviewer only: (user) (reason)')
     @commands.check_any(commands.has_role(INTERVIEWER_ROLE_ID), commands.has_role(STAFF_ROLE_ID))
-    async def ban(self, ctx, target, *, reason):
+    async def ban(self, ctx, target, *, reason = None):
         try:
             user = self.bot.get_user(int(target))
         except ValueError:
@@ -140,14 +143,20 @@ class Admin(commands.Cog):
                 return
         except AttributeError:
             pass  
+        
         embed = discord.Embed(title='Server Ban', color=0xff6464)
         embed.set_author(name=f'{user.name}#{user.discriminator}', icon_url=user.avatar_url)
         embed.add_field(name='Target', value=user.mention, inline=True)
-        embed.add_field(name='Moderator', value=ctx.author.mention, inline=True)
-        embed.add_field(name='Reason', value=reason, inline=False)              
+        embed.add_field(name='Moderator', value=ctx.author.mention, inline=True)          
         embed.timestamp = ctx.message.created_at
 
-        await ctx.guild.ban(user, reason=reason, delete_message_days=0)
+        if reason:
+            embed.add_field(name='Reason', value=reason, inline=False)
+            await ctx.guild.ban(user, reason=reason, delete_message_days=0)
+        else:
+            embed.add_field(name='Reason', value='none', inline=False)
+            await ctx.guild.ban(user, reason='none', delete_message_days=0)
+
         await ctx.send(embed=embed)
     
 #    @commands.command(help='Interviewer only: (user)')
@@ -373,7 +382,7 @@ class Admin(commands.Cog):
 
     @commands.command(help='Marinated only: (member)')
     @commands.check_any(commands.has_role(INTERVIEWER_ROLE_ID), commands.has_role(STAFF_ROLE_ID), commands.has_role(MARINATED_ID))
-    async def mute(self, ctx, *, target):
+    async def mute(self, ctx, target):
         try:
             member = ctx.guild.get_member(int(target))
         except ValueError:
@@ -397,7 +406,7 @@ class Admin(commands.Cog):
 
     @commands.command(help='Marinated only: (member)')
     @commands.check_any(commands.has_role(INTERVIEWER_ROLE_ID), commands.has_role(STAFF_ROLE_ID), commands.has_role(MARINATED_ID))
-    async def unmute(self, ctx, *, target):
+    async def unmute(self, ctx, target):
         try:
             member = ctx.guild.get_member(int(target))
         except ValueError:
