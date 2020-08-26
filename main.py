@@ -2,15 +2,15 @@ import os
 
 from dotenv import load_dotenv
 from discord.ext import commands
+from utilities import settings
 
-load_dotenv()   
-TOKEN = os.getenv('DISCORD_TOKEN')
-COGS = os.getenv('COG_PATH')
+settings = settings.config("settings.json")
 bot = commands.Bot(command_prefix=',')
-
-for file in os.listdir(COGS):
+    
+for file in os.listdir(settings.COG_PATH):
     if file.endswith('.py'):
         name = file[:-3]
         bot.load_extension(f"cogs.{name}")
-
-bot.run(TOKEN)
+        
+bot.run(settings.DISCORD_TOKEN)
+    

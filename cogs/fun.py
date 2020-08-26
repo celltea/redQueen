@@ -4,11 +4,11 @@ import asyncio
 
 from discord.ext import commands
 from dotenv import load_dotenv
-from utilities import formatting
+from utilities import formatting, settings
 from random import randint
 
-#env vars
-VERIFIED_ROLE_ID = int(os.getenv('VERIFIED_ROLE_ID'))
+settings = settings.config("settings.json")
+
 
 class Fun(commands.Cog):
     def __init__(self, bot):
@@ -22,23 +22,19 @@ class Fun(commands.Cog):
         self.rps_state = 0
         self.set = 0
 
+
     #use subcommands with this later on to make it crisp
     @commands.command(help='(start/choose) (verified user)')
     #@commands.has_role(VERIFIED_ROLE_ID) #this breaks the dm-aspect of the game
     async def rps(self, ctx, state, *, selection=None):
         if state.lower() == 'start' and self.rps_state == 0:
-            #print('start state')
-            try:
-                self.rps2 = ctx.guild.get_member(int(selection))
-            except ValueError:
-                self.rps2 = ctx.guild.get_member(int(formatting.strip(selection)))
+            self.rps2 = formatting.getfromin(self.bot, ctx, "mem", selection)
 
             self.rps1 = ctx.message.author
             self.rps_state = 1
             self.rps_channel = ctx.message.channel
 
             await ctx.send(content='Please send your choice to my dm using: \n> **,rps choose rock**   **,rps choose paper**  **,rps choose scissors**')
-
 
             for i in range(60):
                 if self.rps_state == 0:
@@ -129,20 +125,15 @@ class Fun(commands.Cog):
             self.input2 = None
             self.rps_channel = None
 
+
     @commands.command(help='(user)')
-    @commands.has_role(VERIFIED_ROLE_ID)
+    @commands.has_role(settings.VERIFIED_ROLE_ID)
     async def ship(self, ctx, target1, target2=None):
-        try:
-            member2 = ctx.guild.get_member(int(target1))
-        except ValueError:
-            member2 = ctx.guild.get_member(int(formatting.strip(target1)))
+        member2 = formatting.getfromin(self.bot, ctx, "mem", target1)
 
         #checking to see if author is implied as a target
         if target2:
-            try:
-                member1 = ctx.guild.get_member(int(target2))
-            except ValueError:
-                member1 = ctx.guild.get_member(int(formatting.strip(target2)))
+            member1 = formatting.getfromin(self.bot, ctx, "mem", target2)
 
         else:
             member1 = ctx.author
@@ -197,10 +188,13 @@ class Fun(commands.Cog):
                 break
 
         embed = discord.Embed(description=f'**{comp_num}%** {bars_on}{bars_off} {status}', color=0xe484dc)
+
+        await ctx.message.delete()
         await ctx.send(content=f'{member1.mention} and {member2.mention} sitting in a tree...', embed=embed)
 
+
     @commands.command(help='(num of dice)d(faces on die) + (modifiers)')
-    @commands.has_role(VERIFIED_ROLE_ID)
+    @commands.has_role(settings.VERIFIED_ROLE_ID)
     async def roll(self, ctx, *, roll):
         roll = roll.lower()
         split = roll.index('d')
@@ -242,17 +236,15 @@ class Fun(commands.Cog):
         message = message + f'\n\n__Total__ = {results}'
         await ctx.send(content=message)
 
+
+    #UNFINISHED
     @commands.command(help='(user)')
-    @commands.has_role(VERIFIED_ROLE_ID)
+    @commands.is_owner()
     async def deathbattle(self, ctx, *, target):
         try:
-            member2_name = f'**{ctx.guild.get_member(int(target)).name}'
-        except ValueError:
-            try:
-                member2_name = f'**{ctx.guild.get_member(int(formatting.strip(target))).name}**'
-            except TypeError:
-                member2_name = f'**{target}**' 
-        
+            member2_name = formatting.getfromin(self.bot, ctx, "mem", target)
+        except TypeError:
+            member2_name = target   
         member1_name = ctx.author.name
 
         hp1_t = 100
@@ -270,8 +262,9 @@ class Fun(commands.Cog):
         while current_hp[0] > 0 and current_hp[1] > 0:
             damage = rantint(1,40)
 
+
     @commands.command(aliases=['whatsthis', 'owo'], help='no arg: requested by Naaz')
-    @commands.has_role(VERIFIED_ROLE_ID)
+    @commands.has_role(settings.VERIFIED_ROLE_ID)
     async def naazify(self, ctx):
         async for message in ctx.channel.history(limit=2):
             if message.id != ctx.message.id:
@@ -307,7 +300,8 @@ class Fun(commands.Cog):
             i = i + 1
 
         sO = f'**{message.author}**: {leadFace}{stut}{body}{trailFace}' 
-
+        
+        await ctx.message.delete()
         await ctx.send(content=sO)
 
 

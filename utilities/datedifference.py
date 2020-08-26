@@ -24,14 +24,19 @@ def date_difference(pastest, presentest=None, offset=None):
         raise(ValueError("Must supply presentest or offset (from now)"))
     
     if delta_y >= 1:
-        return(f'{delta_y} year(s), {delta_mo} month(s), {delta_d} day(s)')   
-    if delta_mo >= 1:
+        return(f'{delta_y} year(s), {delta_mo} month(s), {delta_d} day(s)')
+
+    elif delta_mo >= 1:
         return(f'{delta_mo} month(s), {delta_d} day(s), {delta_h} hour(s)')
-    if delta_d >= 1:
+
+    elif delta_d >= 1:
         return(f'{delta_d} day(s), {delta_h} hour(s), {delta_mi} minute(s)')
-    if delta_h >= 1:
+
+    elif delta_h >= 1:
         return(f'{delta_h} hour(s), {delta_mi} minute(s), {delta_s} second(s)')
-    if delta_mi >= 1:
+
+    elif delta_mi >= 1:
         return(f'{delta_mi} minute(s), {delta_s} second(s)')
+        
     else:
         return(f'{delta_s} second(s), {delta_ms} millisecond(s)')

@@ -4,10 +4,10 @@ import os
 from discord.ext import commands
 from dotenv import load_dotenv
 from datetime import datetime
-from utilities import datedifference, formatting
+from utilities import datedifference, formatting, settings
 
-#env variables
-VERIFIED_ROLE_ID = int(os.getenv('VERIFIED_ROLE_ID'))
+settings = settings.config("settings.json")
+
 
 class Info(commands.Cog):
     def __init__(self, bot):
@@ -15,12 +15,9 @@ class Info(commands.Cog):
 
 
     @commands.command(aliases=['userinfo'], help='(member)')
-    @commands.has_role(VERIFIED_ROLE_ID)
-    async def memberinfo(self, ctx, target):
-        try:
-            member = ctx.guild.get_member(int(target))
-        except ValueError:
-            member = ctx.guild.get_member(int(formatting.strip(target)))
+    @commands.has_role(settings.VERIFIED_ROLE_ID)
+    async def memberinfo(self, ctx, member):
+        member = formatting.getfromin(self.bot, ctx, "mem", member)
 
         roles = ''  
         time_since_created = datedifference.date_difference(member.created_at, datetime.utcnow())
@@ -51,15 +48,12 @@ class Info(commands.Cog):
         embed.add_field(name='Roles', value=roles, inline=False)
 
         await ctx.send(embed=embed)   
-        #await ctx.send(f'```ruby\n     User: {member.name}#{member.discriminator} \n Nickname: {member.display_name} \n       ID: {member.id} \n  Created: #{time_since_created} - {member.created_at} \n   Joined: {time_since_joined} - {member.joined_at} \n   Avatar: {member.avatar_url} \n    Nitro: {member.premium_since} \n    Roles: {roles}```')
+
 
     @commands.command(help='(role)')
-    @commands.has_role(VERIFIED_ROLE_ID)
-    async def howmany(self, ctx, role_id):
-        try:
-            role = ctx.guild.get_role(int(role_id))
-        except ValueError:
-            role = ctx.guild.get_role(int(formatting.strip(role_id)))
+    @commands.has_role(settings.VERIFIED_ROLE_ID)
+    async def howmany(self, ctx, role):
+        role = formatting.getfromin(self.bot, ctx, "rol", role)
 
         i = 0
 
@@ -74,13 +68,11 @@ class Info(commands.Cog):
 
         await ctx.send(embed=embed)
 
+
     @commands.command(help='(role)')
-    @commands.has_role(VERIFIED_ROLE_ID)
-    async def whoin(self, ctx, role_id):
-        try:
-            role = ctx.guild.get_role(int(role_id))
-        except ValueError:
-            role = ctx.guild.get_role(int(formatting.strip(role_id)))
+    @commands.has_role(settings.VERIFIED_ROLE_ID)
+    async def whoin(self, ctx, role):
+        role = formatting.getfromin(self.bot, ctx, "rol", role)
         members = ''
 
         for member in role.members:
@@ -97,13 +89,11 @@ class Info(commands.Cog):
         except discord.HTTPException:
             await ctx.send(f'**Error:** Too many users have this role to send the message through discord. Consider using ,cleanupgen instead')
 
+
     @commands.command(aliases=['av', 'pfp'], help='(user)')
-    @commands.has_role(VERIFIED_ROLE_ID)
-    async def avatar(self, ctx, user_id):
-        try:
-            user = self.bot.get_user(int(user_id))
-        except ValueError:
-            user = self.bot.get_user(int(formatting.strip(user_id)))
+    @commands.has_role(settings.VERIFIED_ROLE_ID)
+    async def avatar(self, ctx):
+        user = formatting.getfromin(self.bot, ctx, "use", user)
 
         embed = discord.Embed(title='Avatar', color=0x64b4ff)
         embed.set_author(name=f'{user.name}#{user.discriminator}', icon_url=user.avatar_url)
@@ -112,10 +102,12 @@ class Info(commands.Cog):
 
         await ctx.send(embed=embed)
 
+
     @commands.command(help=('note: implied target is message above command call, at the moment this command only works on the first reaction (not sure if that means the first in-client or the first by some arbitrary measure)'))
-    @commands.has_role(VERIFIED_ROLE_ID)
+    @commands.has_role(settings.VERIFIED_ROLE_ID)
     async def whoreact(self, ctx):
         react_message = None
+
         async for message in ctx.channel.history(limit=2):
             if ctx.message != message:
                 react_message = message
@@ -123,6 +115,7 @@ class Info(commands.Cog):
         
         message = '```'
         i = 1
+
         async for user in react_message.reactions[0].users():
             message = message + f'{i}. {user.name}#{user.discriminator}\n'
             i += 1
