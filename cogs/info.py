@@ -5,6 +5,7 @@ from discord.ext import commands
 from dotenv import load_dotenv
 from datetime import datetime
 from utilities import datedifference, formatting, settings
+from tinydb import TinyDB
 
 settings = settings.config("settings.json")
 
@@ -17,6 +18,9 @@ class Info(commands.Cog):
     @commands.command(aliases=['userinfo'], help='(member)')
     @commands.has_role(settings.VERIFIED_ROLE_ID)
     async def memberinfo(self, ctx, member):
+        db = TinyDB(settings.DB_PATH)
+        member = Query()
+
         member = formatting.getfromin(self.bot, ctx, "mem", member)
 
         roles = ''  
@@ -92,7 +96,7 @@ class Info(commands.Cog):
 
     @commands.command(aliases=['av', 'pfp'], help='(user)')
     @commands.has_role(settings.VERIFIED_ROLE_ID)
-    async def avatar(self, ctx):
+    async def avatar(self, ctx, user):
         user = formatting.getfromin(self.bot, ctx, "use", user)
 
         embed = discord.Embed(title='Avatar', color=0x64b4ff)
