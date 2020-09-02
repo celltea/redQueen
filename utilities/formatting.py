@@ -1,9 +1,5 @@
-import json
-
+#strips off discord formatting so even @'s of channels can still be used for command inputs
 from discord.ext import commands
-from utilities import settings
-
-settings = settings.config("settings.json")
 
 def getfromin(bot, ctx, mode, inp):
     if mode == 'use':
@@ -35,10 +31,3 @@ def strip(fancy):
             return(None)
         fancy = fancy[1:]
     return(fancy)
-
-def fancify(fname):
-    with open(settings.DB_PATH, 'r') as read_file:
-        parsed = json.load(read_file)
-        read_file.close()
-    with open(settings.DB_PATH, 'w') as read_file:
-        json.dump(parsed, read_file, indent=4, sort_keys=True)

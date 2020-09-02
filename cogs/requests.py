@@ -1,12 +1,11 @@
 import os
 import discord
-from tinydb import TinyDB, Query
 
 
-from datetime import datetime, timezone, date
+from datetime import datetime, timezone
 from dotenv import load_dotenv
 from discord.ext import commands
-from utilities import datedifference, formatting, settings, dbinteract
+from utilities import datedifference, formatting, settings
 from random import randint
 
 settings = settings.config("settings.json")
@@ -20,48 +19,7 @@ class Requests(commands.Cog):
     @commands.command()
     @commands.has_permissions(administrator=True)
     async def test(self, ctx):
-        pass
-
-
-    @commands.command()
-    @commands.has_permissions(administrator=True)
-    async def bunnysetup(self, ctx, *, id_post):
-        db = TinyDB(settings.DB_PATH)
-        member = Query()
-        
-        id_post = id_post + '-'
-        id_build = ''
-        user_ids = []
-        dates = []
-        i = 0
-
-        for char in id_post:
-            if char == '\n' or char == ',':
-                if i % 2 == 0:
-                    user_ids.append(int(id_build))
-                else:
-                    dates.append(id_build)
-                id_build = ''
-                i = i + 1
-            else:
-                id_build = id_build + char
-        
-        i = 0
-        while i < len(user_ids) and i < len(dates): #Doesn't update the DB, only adds to it
-            table = db.table(user_ids[i])
-            table.upsert({'last_seen' : dates[i]}, member.id == user_ids[i])
-            i = i + 1
-        formatting.fancify(settings.DB_PATH)
-    
-    
-    @commands.command()
-    @commands.has_permissions(administrator=True)
-    async def dbsetup(self, ctx):
-        member_list = []
-        for member in ctx.guild.members:
-            member_list.append(member.id)
-
-        dbinteract.activity_push(member_list, 'before 2020-08-31')
+        print(type(settings.TURNOVER_CHANNEL_ID))
 
 
     @commands.command()
