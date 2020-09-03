@@ -13,4 +13,3 @@ for file in os.listdir(settings.COG_PATH):
         bot.load_extension(f"cogs.{name}")
         
 bot.run(settings.DISCORD_TOKEN)
-    

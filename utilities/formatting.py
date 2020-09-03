@@ -1,5 +1,11 @@
-#strips off discord formatting so even @'s of channels can still be used for command inputs
+import json
+
+from math import trunc
+from datetime import datetime
 from discord.ext import commands
+from utilities import settings
+
+settings = settings.config("settings.json")
 
 def getfromin(bot, ctx, mode, inp):
     if mode == 'use':
@@ -31,3 +37,75 @@ def strip(fancy):
             return(None)
         fancy = fancy[1:]
     return(fancy)
+
+def fancify(fname):
+    with open(fname, 'r') as read_file:
+        parsed = json.load(read_file)
+        read_file.close()
+    with open(fname, 'w') as read_file:
+        json.dump(parsed, read_file, indent=4, sort_keys=True)
+
+def datetime_difference(pastest, presentest=None):
+    if presentest:
+        dt = presentest - pastest
+        offset = dt.seconds + (dt.days * 60*60*24)
+
+        delta_ms = trunc(dt.microseconds / 1000)
+        delta_s = trunc(offset % 60)
+        offset /= 60
+        delta_mi = trunc(offset % 60)
+        offset /= 60
+        delta_h = trunc(offset % 24)
+        offset /= 24
+        delta_d = trunc(offset % 30)
+        offset /= 30 #I know months aren't standard to 30 days, I also don't need that level of accuracy if it's in the range of months
+        delta_mo = trunc(offset % 12)
+        offset /= 12
+        delta_y = trunc(offset)
+    
+    else:
+        raise(ValueError("Must supply presentest"))
+    
+    if delta_y >= 1:
+        return(f'{delta_y} year(s), {delta_mo} month(s), {delta_d} day(s)')
+
+    elif delta_mo >= 1:
+        return(f'{delta_mo} month(s), {delta_d} day(s), {delta_h} hour(s)')
+
+    elif delta_d >= 1:
+        return(f'{delta_d} day(s), {delta_h} hour(s), {delta_mi} minute(s)')
+
+    elif delta_h >= 1:
+        return(f'{delta_h} hour(s), {delta_mi} minute(s), {delta_s} second(s)')
+
+    elif delta_mi >= 1:
+        return(f'{delta_mi} minute(s), {delta_s} second(s)')
+        
+    else:
+        return(f'{delta_s} second(s), {delta_ms} millisecond(s)')
+
+def date_difference(pastest, presentest=None):
+    if presentest:
+        dt = presentest - pastest
+        offset = dt.days
+
+        delta_d = trunc(offset % 30)
+        offset /= 30
+        delta_m = trunc(offset % 12)
+        offset /= 12
+        delta_y = trunc(offset)
+
+    else:
+        raise(ValueError("Must supply presentest"))
+    
+    if delta_y >= 1:
+        return(f'{delta_y} year(s), {delta_m} month(s), {delta_d} day(s)')
+    
+    elif delta_m >= 1:
+        return(f'{delta_m} month(s), {delta_d} day(s)')
+    
+    elif delta_d > 1:
+        return(f'{delta_d} days')
+
+    else:
+        return('Today')

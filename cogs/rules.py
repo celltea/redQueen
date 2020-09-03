@@ -13,7 +13,6 @@ class Rules(commands.Cog):
         self.bot = bot
 
 
-    #the try except segments allow for the command to be used in dm's without throwing an exception because the bot is unable to delete messages there
     @commands.command(aliases=['verify', 'verification', 'vewify'], help='noarg: prints the verification section of the rules')
     @commands.cooldown(rate='1', per='120', type=commands.BucketType.channel)
     async def verifying(self, ctx):

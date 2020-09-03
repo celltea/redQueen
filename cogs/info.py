@@ -3,8 +3,9 @@ import os
 
 from discord.ext import commands
 from dotenv import load_dotenv
-from datetime import datetime
-from utilities import datedifference, formatting, settings
+from datetime import datetime, date
+from utilities import formatting, settings
+from tinydb import TinyDB, Query
 
 settings = settings.config("settings.json")
 
@@ -18,12 +19,19 @@ class Info(commands.Cog):
     @commands.has_role(settings.VERIFIED_ROLE_ID)
     async def memberinfo(self, ctx, member):
         member = formatting.getfromin(self.bot, ctx, "mem", member)
+        now = datetime.utcnow()
+
+        db = TinyDB(settings.DB_PATH + str(member.id) + '.json')
+        table = db.table('information')
+        last_seen = table.get(doc_id=1)['last_seen']
+        last_seen = datetime.strptime(last_seen, "%Y-%m-%d")
+        time_since_message = formatting.date_difference(last_seen, datetime.today())
 
         roles = ''  
-        time_since_created = datedifference.date_difference(member.created_at, datetime.utcnow())
-        time_since_joined = datedifference.date_difference(member.joined_at, datetime.utcnow())
+        time_since_created = formatting.datetime_difference(member.created_at, now)
+        time_since_joined = formatting.datetime_difference(member.joined_at, now)
         try:
-            time_since_nitro = datedifference.date_difference(member.premium_since, datetime.utcnow())
+            time_since_nitro = formatting.datetime_difference(member.premium_since, now)
         except TypeError:
             time_since_nitro = "None"
 
@@ -44,6 +52,7 @@ class Info(commands.Cog):
             embed.add_field(name='Status', value='None')
         embed.add_field(name='Created', value=f'**__{time_since_created}__** - {member.created_at}', inline=False)
         embed.add_field(name='Joined', value=f'**__{time_since_joined}__** - {member.joined_at}', inline=False)
+        embed.add_field(name='Last seen', value=f'**__{time_since_message}__** - {last_seen.date()}', inline=False)
         embed.add_field(name='Nitro', value=f'**__{time_since_nitro}__** - {member.premium_since}', inline=False)
         embed.add_field(name='Roles', value=roles, inline=False)
 
@@ -92,7 +101,7 @@ class Info(commands.Cog):
 
     @commands.command(aliases=['av', 'pfp'], help='(user)')
     @commands.has_role(settings.VERIFIED_ROLE_ID)
-    async def avatar(self, ctx):
+    async def avatar(self, ctx, user):
         user = formatting.getfromin(self.bot, ctx, "use", user)
 
         embed = discord.Embed(title='Avatar', color=0x64b4ff)

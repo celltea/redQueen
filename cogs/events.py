@@ -1,13 +1,14 @@
 import discord
 import os
 import asyncio
+import sys
 
 from discord.ext.commands import errors
 from discord.ext import commands
-from dotenv import load_dotenv
 from datetime import datetime
-from utilities import datedifference, settings
+from utilities import settings, dbinteract, formatting
 from random import randint
+from tinydb import database, TinyDB, Query
 
 settings = settings.config("settings.json")
 
@@ -16,32 +17,78 @@ class Events(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.bot_commands = self.bot.get_channel(settings.BOT_COMMANDS_ID)
-        self.tom = self.bot.get_user(718545043312607232)
+        self.members = []
+
+
+    #only works on cogs, will not apply any module updates
+    @commands.command(help='no arg: WARNING reloads all cogs')
+    @commands.has_permissions(administrator=True)
+    async def reload(self, ctx):
+        dbinteract.activity_push(self.members, datetime.now().date())
+
+        for file in os.listdir(settings.COG_PATH):
+            if file.endswith('.py'):
+                name = file[:-3]
+                self.bot.reload_extension(f"cogs.{name}")
+
+        await ctx.send(content='cogs reloaded')
+
+    
+    @commands.command(help='no arg: WARNING stops bot')
+    @commands.has_permissions(administrator=True)
+    async def stop(self, ctx):
+        dbinteract.activity_push(self.members, datetime.now().date())
+        await ctx.send(content='shutting down')
+        sys.exit()
+
+
+    async def periodic_push(self):
+        duration = (datetime.max - datetime.today()).seconds + 5
+        await asyncio.sleep(duration)
+        while True:
+            dbinteract.activity_push(self.members, datetime.now().date())
+            self.members = []  
+            await asyncio.sleep(86400)      
 
 
     @commands.Cog.listener()
     async def on_ready(self):
         print(f'{self.bot.user.name} has connected succesfully!')
-        print(settings.TURNOVER_CHANNEL_ID)
+
+        await Events.periodic_push(self)
 
 
     @commands.Cog.listener()
     async def on_member_join(self, member):
         channel = self.bot.get_channel(settings.TURNOVER_CHANNEL_ID)
-        user = self.bot.get_user(member.id)
-        await channel.send(f':blue_heart: **__Joined:__** {user.mention} aka *{user.name}#{member.discriminator}* __\'{member.id}\'__ ')  
+
+        await channel.send(f':blue_heart: **__Joined:__** {member.mention} aka *{member.name}#{member.discriminator}* __\'{member.id}\'__ ')  
+
+        #handle the unfortunate double-joiner single-user event
+        path = settings.DB_PATH + str(member.id) + '.json'
+        db = TinyDB(path)
+        member = Query()
+        table = db.table('information')
+        table.upsert({'last_seen' : str(datetime.now().date())}, member.last_seen != None)
+        formatting.fancify(path)
     
 
     @commands.Cog.listener()
     async def on_member_remove(self, member):
         channel = self.bot.get_channel(settings.TURNOVER_CHANNEL_ID)
         user = self.bot.get_user(member.id)
-        verified_role = member.guild.get_role(settings.VERIFIED_ROLE_ID)
 
-        if settings.VERIFIED_ROLE_ID in member.roles:
-            await channel.send(f':heart: **__Left:__** {user.mention} aka *{user.name}#{member.discriminator}* __\'{member.id}\'__. We\'ll miss you! :heart:') 
-        else:
-            await channel.send(f':heart: **__Left:__** {user.mention} aka *{user.name}#{member.discriminator}* __\'{member.id}\'__') 
+        await channel.send(f':heart: **__Left:__** {user.mention} aka *{user.name}#{member.discriminator}* __\'{member.id}\'__') 
+
+        try: 
+            self.members.pop(self.members.index(member.id))
+        except ValueError:
+            pass
+
+        try:
+            os.remove(settings.DB_PATH + str(member.id) + '.json')
+        except OSError:
+            pass
 
 
     async def disboard_onm(self, message):
@@ -62,13 +109,19 @@ class Events(commands.Cog):
         if message.author.id == 583861014794207237:
             if randint(1, 20) == 1:
                 emote = self.bot.get_emoji(726170090026041456)
-                await message.add_reaction(emote)               
+                await message.add_reaction(emote)          
+
+
+    async def activity_upd(self, message):
+        if message.author.id not in self.members:
+            self.members.append(message.author.id)
 
 
     @commands.Cog.listener()
     async def on_message(self, message):
         await Events.disboard_onm(self, message)
         await Events.anna_onm(self, message)
+        await Events.activity_upd(self, message)
         
 
 #    @commands.Cog.listener()
@@ -91,9 +144,8 @@ class Events(commands.Cog):
 
 
     async def anna_upd(self, before, after):
-        if after.id == 583861014794207237:
-            if before.nick != after.nick and after.nick != 'Annalina':
-                await after.edit(nick='Annalina')
+        if after.id == 583861014794207237 and before.nick != after.nick and after.nick != 'Annalina':
+            await after.edit(nick='Annalina')
 
 
     async def unv_upd(self, before, after):
@@ -101,35 +153,31 @@ class Events(commands.Cog):
         joiner_role = after.guild.get_role(settings.JOINER_ROLE_ID)
         unverified_role = after.guild.get_role(settings.UNVERIFIED_ROLE_ID)
         #checking when zira removes the joiner role to send the welcome message
-        if joiner_role in before.roles:
-            if joiner_role not in after.roles and unverified_role in after.roles:
-                channel = self.bot.get_channel(settings.WELCOME_CHANNEL_ID)
-                staff_role = after.guild.get_role(settings.STAFF_ID)
-                greeter_role = after.guild.get_role(settings.GREETER_ID)
-                welcome_channel = self.bot.get_channel(settings.WELCOME_CHANNEL_ID)
-                unverified_rules = self.bot.get_channel(settings.UNVERIFIED_RULES_ID)
+        if joiner_role in before.roles and joiner_role not in after.roles and unverified_role in after.roles:
+            channel = self.bot.get_channel(settings.WELCOME_CHANNEL_ID)
+            staff_role = after.guild.get_role(settings.STAFF_ROLE_ID)
+            greeter_role = after.guild.get_role(settings.GREETER_ROLE_ID)
+            welcome_channel = self.bot.get_channel(settings.WELCOME_CHANNEL_ID)
+            unverified_rules = self.bot.get_channel(settings.UNVERIFIED_RULES_ID)
                 
-                elapsed_time = datedifference.date_difference(after.joined_at, timestamp_now)
-                difference = timestamp_now - after.joined_at
-                elapsed_seconds = difference.total_seconds()
+            elapsed_time = formatting.datetime_difference(after.joined_at, timestamp_now)
+            difference = timestamp_now - after.joined_at
+            elapsed_seconds = difference.total_seconds()
 
-                if elapsed_seconds < 16:
-                    await after.ban(delete_message_days=0)
-                    await welcome_channel.send(f'**{after.name}#{after.discriminator}** has been banned from the server for spending *{elapsed_time}* reading the rules.')
-                    message = None
-                    async for message in welcome_channel.history(limit=1):
-                        pass
-                    emote = self.bot.get_emoji(720091197594534001)
-                    await message.add_reaction(emote)
-                    try:
-                        await after.create_dm()
-                        await after.dm_channel.send(f'You have automatically been banned from the server for spending too little time reading the rules.')
-                    except discord.Forbidden:
-                        pass
+            if elapsed_seconds < 16:
+                await after.ban(delete_message_days=0)
+                message = await welcome_channel.send(f'**{after.name}#{after.discriminator}** has been banned from the server for spending *{elapsed_time}* reading the rules.')
+                emote = self.bot.get_emoji(720091197594534001)
+                await message.add_reaction(emote)
+                try:
+                    await after.create_dm()
+                    await after.dm_channel.send(f'You have automatically been banned from the server for spending too little time reading the rules.')
+                except discord.Forbidden:
+                    pass
 
-                else:
-                    await welcome_channel.send(f'Welcome to {after.guild.name}, {after.mention} Please please please make sure you\'ve read over our {unverified_rules.mention}. You should be greeted by our {greeter_role.mention}s shortly. \nAdditionally if you have any questions feel free to ask {staff_role.mention}. I promise we don\'t bite :purple_heart: \nYou took *{elapsed_time}* to read the rules. ')
-        return
+            else:
+                await welcome_channel.send(f'Welcome to {after.guild.name}, {after.mention} Please please please make sure you\'ve read over our {unverified_rules.mention}. You should be greeted by our {greeter_role.mention}s shortly. \nAdditionally if you have any questions feel free to ask {staff_role.mention}. I promise we don\'t bite :purple_heart: \nYou took *{elapsed_time}* to read the rules. ')
+        
 
 
     async def boost_upd(self, before, after):

@@ -1,11 +1,12 @@
 import os
 import discord
+from tinydb import TinyDB, Query
 
 
-from datetime import datetime, timezone
+from datetime import datetime, timezone, date
 from dotenv import load_dotenv
 from discord.ext import commands
-from utilities import datedifference, formatting, settings
+from utilities import formatting, settings, dbinteract
 from random import randint
 
 settings = settings.config("settings.json")
@@ -19,7 +20,53 @@ class Requests(commands.Cog):
     @commands.command()
     @commands.has_permissions(administrator=True)
     async def test(self, ctx):
-        print(type(settings.TURNOVER_CHANNEL_ID))
+        path = settings.DB_PATH + str(ctx.author.id)
+        db = TinyDB(path)
+        member = Query()
+        table = db.table('information')
+        table.upsert({'last_seen' : str(datetime.now().date())}, member.last_seen == None)
+        formatting.fancify(path)
+
+
+    @commands.command()
+    @commands.has_permissions(administrator=True)
+    async def bunnysetup(self, ctx, *, id_post):
+        id_post = id_post + '-'
+        id_build = ''
+        user_ids = []
+        dates = []
+        i = 0
+
+        for char in id_post:
+            if char == '\n' or char == ',':
+                if i % 2 == 0:
+                    user_ids.append(id_build)
+                else:
+                    dates.append(id_build)
+                id_build = ''
+                i = i + 1
+            else:
+                id_build = id_build + char
+        
+        i = 0
+        while i < len(user_ids) and i < len(dates): #Doesn't update the DB, only adds to it
+            path = settings.DB_PATH + user_ids[i] + '.json'
+            db = TinyDB(path)
+            member = Query()
+            table = db.table('information')
+            table.upsert({'last_seen' : dates[i]}, member.last_seen != None)
+            i = i + 1
+            formatting.fancify(path)
+    
+    
+    @commands.command()
+    @commands.has_permissions(administrator=True)
+    async def dbsetup(self, ctx):
+        member_list = []
+        for member in ctx.guild.members:
+            member_list.append(member.id)
+
+        dbinteract.activity_push(member_list, 'before 2020-08-31')
 
 
     @commands.command()

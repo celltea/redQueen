@@ -2,12 +2,12 @@ import discord
 import os 
 import asyncio
 import math
-import sys
 
 from discord.ext import commands
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
-from utilities import datedifference, formatting, settings
+from utilities import formatting, settings
+from tinydb import TinyDB
 
 settings = settings.config("settings.json")
 
@@ -55,18 +55,30 @@ class Admin(commands.Cog):
     @commands.has_permissions(administrator=True)
     async def cleanupgen(self, ctx, role):
         role = formatting.getfromin(self.bot, ctx, "rol", role)
-
         member_list = role.members
-        cleanup_file = open('cleanup_file.csv', 'w+')
+        cleanup_file = open(settings.CLEANUP_PATH, 'w+')
         i = 0
-        with open('cleanup_file.csv', 'w+') as cleanup_file:
-            while i < len(member_list):
-                cleanup_file.write(f'{member_list[i].name.encode(encoding="ascii", errors="replace")}, "{member_list[i].id}", {member_list[i].joined_at}\n')
-                i = i + 1
-        await ctx.send(content=f'Please see the console. There were {i} user(s)', file=discord.File(fp='cleanup_file.csv', filename='cleanup_file.csv'))
+        
+        with open(settings.CLEANUP_PATH, 'w+') as cleanup_file:
+            cleanup_file.write('Member, Id, Joined, Last seen, Nitro\n')
+            for member in member_list:
+                db = TinyDB(settings.DB_PATH + str(member.id) + '.json')
+                table = db.table('information')
+
+                name = member.name.encode(encoding="ascii", errors="replace")
+                member_id = member.id
+                joined = member.joined_at
+                try:
+                    last_seen = table.get(doc_id=1)['last_seen']
+                except:
+                    last_seen = 'N/A'
+                nitro = member.premium_since
+
+                cleanup_file.write(f'{name}, "{member_id}", {joined}, {last_seen}, {nitro}\n')
+        await ctx.send(content=f'Please see the console. There were {len(member_list)} user(s)', file=discord.File(fp=settings.CLEANUP_PATH, filename=settings.CLEANUP_PATH))
     
 
-    @commands.command(help='Interviewer only: (user) (reason)')
+    @commands.command(aliases=['unwelcome'], help='Interviewer only: (user) (reason)')
     @commands.check_any(commands.has_role(settings.INTERVIEWER_ROLE_ID), commands.has_role(settings.STAFF_ROLE_ID))
     async def kick(self, ctx, member, *, reason = None):
         member = formatting.getfromin(self.bot, ctx, "mem", member)
@@ -149,22 +161,19 @@ class Admin(commands.Cog):
 
     @commands.command(help='Staff only: (quantity) (first joiner post to ban) (reason)')
     @commands.has_permissions(administrator=True)
-    async def massban(self, ctx, quantity, start, *, reason):
-        timestamp = discord.utils.snowflake_time(int(start))
+    async def massban(self, ctx, num, start, *, reason):
+        timestamp = discord.utils.snowflake_time(int(start)) + timedelta(milliseconds=1)
         channel = self.bot.get_channel(settings.JOIN_CHANNEL_ID)
-        timestamp = timestamp + timedelta(milliseconds=1)
         targets = []
-        quantity = int(quantity)
-        i = 0
+        num = int(num)
 
         async for message in channel.history(limit=quantity, before=timestamp):
             targets.append(message.author)
-            i += 1
 
         for user in targets:
             await ctx.guild.ban(user, reason=reason, delete_message_days=0)
 
-        embed = discord.Embed(description=f'**{i} users have been banned**',color=0xff6464)
+        embed = discord.Embed(description=f'**{num} users have been banned**',color=0xff6464)
         embed.set_author(name=f'{ctx.author.name}#{ctx.author.discriminator}', icon_url=ctx.author.avatar_url)
         embed.timestamp = ctx.message.created_at
 
@@ -263,7 +272,7 @@ class Admin(commands.Cog):
         await ctx.send(f'{self.queue}')
     
 
-    @commands.command(help='Interviewer only: noarg')
+    @commands.command(aliases=['q'], help='Interviewer only: noarg')
     @commands.has_role(settings.INTERVIEWER_ROLE_ID)
     async def queue(self, ctx):
         try:
@@ -276,47 +285,26 @@ class Admin(commands.Cog):
     @commands.command(help='(number of messages)')
     @commands.has_permissions(administrator=True)
     async def clear(self, ctx, num):
-        i = 0
         num = int(num) + 1 #accounting for the command usage
-        channel = ctx.channel
-
-        if num // 100 >= 1:
-            i = num // 100
-
+        i = num // 100
         r = num % 100
 
         while i > 0:
             messages = []
-            async for message in channel.history(limit=100):
+            async for message in ctx.channel.history(limit=100):
                 messages.append(message)
             await ctx.channel.delete_messages(messages)
             i = i - 1
 
-        await ctx.channel.delete_messages(ctx.message)
-        
+        messages = []
+        async for message in ctx.channel.history(limit=r):
+            messages.append(message)
+        await ctx.channel.delete_messages(messages)
+
         embed = discord.Embed(title='Clear', description=f'{num - 1} messages deleted', color=0x64b4ff)
         embed.set_author(name=f'{ctx.author.name}#{ctx.author.discriminator}', icon_url=ctx.author.avatar_url)
 
-        await ctx.send(embed=embed, delete_after=5)
-
-
-    #only works on cogs, will not apply any module updates
-    @commands.command(help='no arg: WARNING reloads all cogs')
-    @commands.has_permissions(administrator=True)
-    async def reload(self, ctx):
-        for file in os.listdir(settings.COG_PATH):
-            if file.endswith('.py'):
-                name = file[:-3]
-                self.bot.reload_extension(f"cogs.{name}")
-
-        await ctx.send(content='cogs reloaded')
-    
-
-    @commands.command(help='no arg: WARNING stops bot')
-    @commands.has_permissions(administrator=True)
-    async def stop(self, ctx):
-        await ctx.send(content='shutting down')
-        sys.exit()
+        await ctx.send(embed=embed, delete_after=3)  
 
 
     @commands.command(help='Interviewer only: (member)')
@@ -346,7 +334,7 @@ class Admin(commands.Cog):
 
 
     @commands.command(help='Marinated only: (member)')
-    @commands.check_any(commands.has_role(settings.INTERVIEWER_ROLE_ID), commands.has_role(settings.STAFF_ROLE_ID), commands.has_role(settings.MARINATED_ID))
+    @commands.check_any(commands.has_role(settings.INTERVIEWER_ROLE_ID), commands.has_role(settings.STAFF_ROLE_ID), commands.has_role(settings.MARINATED_ROLE_ID))
     async def mute(self, ctx, member):
         member = formatting.getfromin(self.bot, ctx, "mem", member)
         verified = ctx.guild.get_role(settings.VERIFIED_ROLE_ID)
@@ -368,7 +356,7 @@ class Admin(commands.Cog):
 
 
     @commands.command(help='Marinated only: (member)')
-    @commands.check_any(commands.has_role(settings.INTERVIEWER_ROLE_ID), commands.has_role(settings.STAFF_ROLE_ID), commands.has_role(settings.MARINATED_ID))
+    @commands.check_any(commands.has_role(settings.INTERVIEWER_ROLE_ID), commands.has_role(settings.STAFF_ROLE_ID), commands.has_role(settings.MARINATED_ROLE_ID))
     async def unmute(self, ctx, member):
         member = formatting.getfromin(self.bot, ctx, "mem", member)
         verified = ctx.guild.get_role(settings.VERIFIED_ROLE_ID)
