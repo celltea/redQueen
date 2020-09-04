@@ -23,7 +23,7 @@ class Info(commands.Cog):
 
         db = TinyDB(settings.DB_PATH + str(member.id) + '.json')
         table = db.table('information')
-        last_seen = table.get(doc_id=1)['last_seen']
+        last_seen = table.get(Query().last_seen != None)['last_seen']
         last_seen = datetime.strptime(last_seen, "%Y-%m-%d")
         time_since_message = formatting.date_difference(last_seen, datetime.today())
 
