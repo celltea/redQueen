@@ -19,13 +19,49 @@ class Requests(commands.Cog):
 
     @commands.command()
     @commands.has_permissions(administrator=True)
-    async def test(self, ctx):
-        path = settings.DB_PATH + str(ctx.author.id)
+    async def test1(self, ctx):
+        path = settings.DB_PATH + 'temp' + '.json'
         db = TinyDB(path)
+        table = db.table('test')
         member = Query()
-        table = db.table('information')
-        table.upsert({'last_seen' : str(datetime.now().date())}, member.last_seen == None)
+        table.upsert({'key2' : 666731127267917835}, member.test_key1 != None)
         formatting.fancify(path)
+
+
+    @commands.command()
+    @commands.has_permissions(administrator=True)
+    async def boostsetup(self, ctx):
+        member_list = []
+        role = ctx.guild.get_role(settings.BOOSTER_ROLE_ID)
+
+        for member in role.members:
+            path = settings.DB_PATH + str(member.id) + '.json'
+            db = TinyDB(path)
+            table = db.table('boost')
+            member = Query()
+            table.upsert({'role_id' : 'temp'}, member.role_id != None)
+            formatting.fancify(path)
+
+
+    @commands.command()
+    @commands.has_permissions(administrator=True)
+    async def test2(self, ctx):
+        path = settings.DB_PATH + 'temp' + '.json'
+        db = TinyDB(path)
+        table = db.table('test')
+        member = Query()
+        table.remove(member.key1 != None)
+        formatting.fancify(path) 
+
+
+    @commands.command()
+    @commands.has_permissions(administrator=True)
+    async def test3(self, ctx):
+        db = TinyDB(settings.DB_PATH + 'temp' + '.json')
+        table = db.table('test')
+        member = Query()
+        test = table.get(member.test_key1 != None)['test_key1'] #Grabs document_id X containing member.y and then finds value corresponding to ['key_str']
+        print(test)
 
 
     @commands.command()
@@ -67,21 +103,6 @@ class Requests(commands.Cog):
             member_list.append(member.id)
 
         dbinteract.activity_push(member_list, 'before 2020-08-31')
-
-
-    @commands.command()
-    @commands.has_permissions(administrator=True)
-    async def test2(self, ctx, target, *, reason):
-        user = self.bot.get_user(int(target))
-
-        embed = discord.Embed(title='Kick', color=0xff6464)
-        embed.set_author(name=f'{user.name}#{user.discriminator}', icon_url=f'{user.avatar_url}')
-        embed.add_field(name='Target', value=f'{user.mention}', inline=True)
-        embed.add_field(name='Moderator', value=f'{ctx.author.mention}', inline=True)
-        embed.add_field(name='Reason', value=f'{reason}', inline=False)
-        embed.timestamp = ctx.message.created_at
-
-        await ctx.send(embed=embed)
  
 
     @commands.command(help='noarg: a simple way to tell if the bot is online')
