@@ -319,10 +319,12 @@ class Admin(commands.Cog):
 
         try:
             await member.create_dm()
-            await member.dm_channel.send(settings.WELCOME)
+            await member.dm_channel.send(settings.WELCOME1)
+            await member.dm_channel.send(settings.WELCOME2)
         except discord.Forbidden:
             bot_commands = self.bot.get_channel(settings.BOT_COMMANDS_ID)
-            await bot_commands.send(content=f'{member.mention}\n{WELCOME}')
+            await bot_commands.send(content=f'{member.mention}\n{WELCOME1}')
+            await bot_commands.send(content=f'{member.mention}\n{WELCOME2}')
 
         general = self.bot.get_channel(settings.GENERAL_ID)
 
