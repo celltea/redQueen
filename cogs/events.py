@@ -16,7 +16,6 @@ settings = settings.config("settings.json")
 class Events(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.bot_commands = self.bot.get_channel(settings.BOT_COMMANDS_ID)
         self.members = []
 
 
@@ -143,13 +142,8 @@ class Events(commands.Cog):
 #            pass
 
 
-    async def anna_upd(self, before, after):
-        if after.id == 583861014794207237 and before.nick != after.nick and after.nick != 'Annalina':
-            await after.edit(nick='Annalina')
-
-
     async def unv_upd(self, before, after):
-        timestamp_now = datetime.utcnow()
+        timestamp_now = datetime.utcnow() 
         joiner_role = after.guild.get_role(settings.JOINER_ROLE_ID)
         unverified_role = after.guild.get_role(settings.UNVERIFIED_ROLE_ID)
         #checking when zira removes the joiner role to send the welcome message
@@ -181,9 +175,10 @@ class Events(commands.Cog):
 
 
     async def boost_upd(self, before, after):
-        #checking when a user begins boosting the server
         booster_role = after.guild.get_role(settings.BOOSTER_ROLE_ID)
-        if booster_role in after.roles and booster_role not in before.roles:
+        verified_role = after.guild.get_role(settings.VERIFIED_ROLE_ID)
+        #checking when a user begins boosting the server
+        if booster_role in after.roles and booster_role not in before.roles and verified_role in after.roles:
             embed = discord.Embed(title='Server Boost!', description=f'{after.mention} boosted the server!', color=0xe164e1)
             embed.set_thumbnail(url=after.avatar_url)
             embed.timestamp = datetime.utcnow()
@@ -196,14 +191,45 @@ class Events(commands.Cog):
             except discord.Forbidden:
                 await general.send(content=settings.BOOST_DM)
                 pass
+
             await general.send(embed=embed)
+
+            category = after.guild.get_role(settings.BOOSTER_CATEGORY)
+            role = await after.guild.create_role(name=str(after.id), mentionable=True, reason=f'{after.name} boosted the server!')
+            await role.edit(position=category.position - 1)
+            await after.add_roles(role)
+
+            path = settings.DB_PATH + str(after.id) + '.json'
+            db = TinyDB(path)
+            member = Query()
+            table = db.table('boost')
+
+            table.upsert({'role_id' : role.id}, role_id != None) #If conditional is True: update. If False: insert.
+            formatting.fancify(path)
+    
+    async def unboost_upd(self, before, after):
+        booster_role = after.guild.get_role(settings.BOOSTER_ROLE_ID)
+        verified_role = after.guild.get_role(settings.VERIFIED_ROLE_ID)
+        if booster_role in after.roles and booster_role not in before.roles and verified_role in after.roles:
+            path = settings.DB_PATH + str(after.id) + '.json'
+            db = TinyDB(path)
+            table = db.table('boost')
+            member = Query()
+            role_id = table.get(member.role_id != None)['role_id']
+
+            table.remove(member.role_id != None)
+            formatting.fancify(path)
+
+            role = after.guild.get_role(role_id)
+            await role.delete(reason=f'{before.name} is not longer boosting')
+
 
 
     @commands.Cog.listener()
-    async def on_member_update(self, before, after):
+    async def on_member_update(self, before, after): #Assign here so shared vars avoid overlap
         await Events.unv_upd(self, before, after)
         await Events.boost_upd(self, before, after)
-        #await Events.anna_upd(self, before, after)
+        await Events.unboost_upd(self, before, after)
 
 
     #catching updates... this is gonna suck
