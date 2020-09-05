@@ -1,0 +1,37 @@
+{
+    "DISCORD_TOKEN" : "discord_bot_token",
+    "COG_PATH" : "path/to/cogs",
+    "DB_PATH" : "path/to/members",
+    "CLEANUP_PATH" : "/path/to/cleanup_file.csv",
+
+    "GUILD_ID" : 000000000000000000,
+    "WELCOME_CHANNEL_ID" : 000000000000000000,
+    "TURNOVER_CHANNEL_ID" : 000000000000000000,
+    "UNVERIFIED_RULES_ID" : 000000000000000000,
+    "JOIN_CHANNEL_ID" : 000000000000000000,
+    "SAY_LOG_ID" : 000000000000000000,
+    "MOD_LOG_ID" : 000000000000000000,
+    "BOT_COMMANDS_ID" : 000000000000000000,
+    "GENERAL_ID" : 000000000000000000,
+
+    "UNVERIFIED_ROLE_ID" : 000000000000000000,
+    "MUTED_ROLE_ID" : 000000000000000000,
+    "VERIFIED_ROLE_ID" : 000000000000000000,
+    "GREETER_ROLE_ID" : 000000000000000000,
+    "STAFF_ROLE_ID" : 000000000000000000,
+    "JOINER_ROLE_ID" : 000000000000000000,
+    "BOOSTER_ROLE_ID" : 000000000000000000,
+    "INTERVIEWER_ROLE_ID" : 000000000000000000,
+    "SPEED_FINGERS_ID" : 000000000000000000,
+    "MARINATED_ROLE_ID" : 000000000000000000,
+    "BOOSTER_CATEGORY" : 000000000000000000,
+    
+    "VERIFYING_RULES" : "rules_regarding_verification"
+	"TRANSGENDER_RULES" : "rules_regarding_transgender_women"
+    "AGE_RULES" : "rules_regarding_age_limit"
+	
+    "BOOST_DM" : "information_about_server_boosting"
+	"ADVERTISEMENT" : "information_about_server_advertisements"
+    "WELCOME1" : "welcome_message_pt1"
+    "WELCOME2" : "welcome_message_pt2: only necessary if pt1 > 2000 characters"
+}

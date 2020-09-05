@@ -1,5 +1,7 @@
 
 .env
 *.pyc
-*.json
 *.csv
+*.json
+
+!settings.example.json
