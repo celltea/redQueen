@@ -65,8 +65,8 @@ class Boost(commands.Cog):
         except AttributeError:
             category = ctx.guild.get_role(settings.BOOSTER_CATEGORY)
             role = await ctx.guild.create_role(name=str(ctx.author.id), mentionable=True, color=discord.Color(hexadecimal), reason=f'{ctx.author.name} booster role create')
-            await role.edit(position=category.position - 1)
             await ctx.author.add_roles(role)
+            await role.edit(position=category.position - 1)
 
             path = settings.DB_PATH + str(ctx.author.id) + '.json'
             db = TinyDB(path)
@@ -76,7 +76,6 @@ class Boost(commands.Cog):
             table.upsert({'role_id' : role.id}, member.role_id != None) #If conditional is True: update. If False: insert.
             formatting.fancify(path)
         await ctx.send(content=f'{role.mention}\nHere\'s your new role!')   
-        await ctx.send(content=f'{role.mention}\nHere\'s your new role!')
 
     
     @role.command()
@@ -93,8 +92,8 @@ class Boost(commands.Cog):
         except AttributeError:
             category = ctx.guild.get_role(settings.BOOSTER_CATEGORY)
             role = await ctx.guild.create_role(name=name, mentionable=True, reason=f'{ctx.author.name} booster role create')
-            await role.edit(position=category.position - 1)
             await ctx.author.add_roles(role)
+            await role.edit(position=category.position - 1)
 
             path = settings.DB_PATH + str(ctx.author.id) + '.json'
             db = TinyDB(path)

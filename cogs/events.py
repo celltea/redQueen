@@ -204,7 +204,7 @@ class Events(commands.Cog):
             member = Query()
             table = db.table('boost')
 
-            table.upsert({'role_id' : role.id}, role_id != None) #If conditional is True: update. If False: insert.
+            table.upsert({'role_id' : role.id}, member.role_id != None) #If conditional is True: update. If False: insert.
             formatting.fancify(path)
     
     async def unboost_upd(self, before, after):
