@@ -1,11 +1,8 @@
 import discord
-import os 
 import asyncio
-import math
 
 from discord.ext import commands
-from dotenv import load_dotenv
-from datetime import datetime, timedelta
+from datetime import timedelta
 from utilities import formatting, settings
 from tinydb import TinyDB
 

@@ -1,13 +1,8 @@
-import os
 import discord
-from tinydb import TinyDB, Query
 
-
-from datetime import datetime, timezone, date
-from dotenv import load_dotenv
 from discord.ext import commands
 from utilities import formatting, settings, dbinteract
-from random import randint
+from tinydb import TinyDB, Query
 
 settings = settings.config("settings.json")
 

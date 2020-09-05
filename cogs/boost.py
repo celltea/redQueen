@@ -1,8 +1,6 @@
 import discord
-import os
 
 from discord.ext import commands
-from dotenv import load_dotenv
 from utilities import formatting, settings
 from tinydb import TinyDB, Query
 
