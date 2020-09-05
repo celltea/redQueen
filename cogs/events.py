@@ -173,12 +173,14 @@ class Events(commands.Cog):
                 await welcome_channel.send(f'Welcome to {after.guild.name}, {after.mention} Please please please make sure you\'ve read over our {unverified_rules.mention}. You should be greeted by our {greeter_role.mention}s shortly. \nAdditionally if you have any questions feel free to ask {staff_role.mention}. I promise we don\'t bite :purple_heart: \nYou took *{elapsed_time}* to read the rules. ')
         
 
-
     async def boost_upd(self, before, after):
         booster_role = after.guild.get_role(settings.BOOSTER_ROLE_ID)
         verified_role = after.guild.get_role(settings.VERIFIED_ROLE_ID)
+        unverified_role = after.guild.get_role(settings.UNVERIFIED_ROLE_ID)
         #checking when a user begins boosting the server
-        if booster_role in after.roles and booster_role not in before.roles and verified_role in after.roles:
+        verified_cond = booster_role in after.roles and booster_role not in before.roles and verified_role in after.roles #verified user boosts
+        unverified_cond = unverified_role in before.roles and unverified_role not in after.roles and verified_role in after.roles and booster_role in after.roles #unverified user boosts
+        if verified_cond or unverified_cond:
             embed = discord.Embed(title='Server Boost!', description=f'{after.mention} boosted the server!', color=0xe164e1)
             embed.set_thumbnail(url=after.avatar_url)
             embed.timestamp = datetime.utcnow()
@@ -206,7 +208,8 @@ class Events(commands.Cog):
 
             table.upsert({'role_id' : role.id}, member.role_id != None) #If conditional is True: update. If False: insert.
             formatting.fancify(path)
-    
+
+
     async def unboost_upd(self, before, after):
         booster_role = after.guild.get_role(settings.BOOSTER_ROLE_ID)
         verified_role = after.guild.get_role(settings.VERIFIED_ROLE_ID)
@@ -222,7 +225,6 @@ class Events(commands.Cog):
 
             role = after.guild.get_role(role_id)
             await role.delete(reason=f'{before.name} is not longer boosting')
-
 
 
     @commands.Cog.listener()
