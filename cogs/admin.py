@@ -387,7 +387,7 @@ class Admin(commands.Cog):
                     await reaction.remove(user)
 
 
-    @commands.command(help='Staff only: (# of posts)')
+    @commands.command(help='Staff only: (channel) (# of posts)')
     @commands.has_role(settings.STAFF_ROLE_ID)
     async def cleanuproles_channel(self, ctx, channel, num):
         channel = formatting.getfromin(self.bot, ctx, "cha", channel)
@@ -396,7 +396,7 @@ class Admin(commands.Cog):
             await Admin.cleanUpBlock(self, ctx, message.id, channel)
 
 
-    @commands.command(help='Staff only: (# of posts)')
+    @commands.command(help='Staff only: (channel) (message)')
     @commands.has_role(settings.STAFF_ROLE_ID)
     async def cleanuproles_message(self, ctx, channel, message):
         channel = formatting.getfromin(self.bot, ctx, "cha", channel)
