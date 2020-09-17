@@ -101,14 +101,30 @@ class Events(commands.Cog):
             i = embed.description.find(',')
             member_id = embed.description[2:(i-1)]
             member = message.guild.get_member(int(member_id))
-            await member.add_roles(role, reason='bump role')
+            await member.add_roles(role, reason='bump role')   
 
-
-    async def anna_onm(self, message):
-        if message.author.id == 583861014794207237:
-            if randint(1, 20) == 1:
-                emote = self.bot.get_emoji(726170090026041456)
-                await message.add_reaction(emote)          
+    
+    async def boost_onm(self, message):
+        try:
+            booster_role = message.guild.get_role(settings.BOOSTER_ROLE_ID)
+        except AttributeError:
+            return
+        if booster_role in message.author.roles:
+            seed = randint(1,100)
+            if seed <= 25: #5
+                db = TinyDB(settings.DB_PATH + str(message.author.id) + '.json')
+                table = db.table('boost')
+                member = Query()
+                try:
+                    emote_id = table.get(member.emote_id != None)['emote_id'] #Grabs document_id X containing member.y and then finds value corresponding to ['key_str']
+                except TypeError:
+                    return
+                emote = self.bot.get_emoji(emote_id)
+                try:
+                    await message.add_reaction(emote)
+                except discord.errors.InvalidArgument:
+                    await message.author.create_dm()
+                    await message.author.dm_channel.send(content=f'Your custom booster emote has been removed, please choose a new one using ```,boost emote (emote)```')
 
 
     async def activity_upd(self, message):
@@ -119,7 +135,7 @@ class Events(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message):
         await Events.disboard_onm(self, message)
-        await Events.anna_onm(self, message)
+        await Events.boost_onm(self, message)
         await Events.activity_upd(self, message)
         
 
@@ -177,6 +193,7 @@ class Events(commands.Cog):
         booster_role = after.guild.get_role(settings.BOOSTER_ROLE_ID)
         verified_role = after.guild.get_role(settings.VERIFIED_ROLE_ID)
         unverified_role = after.guild.get_role(settings.UNVERIFIED_ROLE_ID)
+        temp_role = after.guild.get_role(666731127267917835)
         #checking when a user begins boosting the server
         verified_cond = booster_role in after.roles and booster_role not in before.roles and verified_role in after.roles #verified user boosts
         unverified_cond = unverified_role in before.roles and unverified_role not in after.roles and verified_role in after.roles and booster_role in after.roles #unverified user boosts
@@ -196,18 +213,18 @@ class Events(commands.Cog):
 
             await general.send(embed=embed)
 
-            category = after.guild.get_role(settings.BOOSTER_CATEGORY)
-            role = await after.guild.create_role(name=str(after.id), mentionable=True, reason=f'{after.name} boosted the server!')
-            await role.edit(position=category.position - 1)
-            await after.add_roles(role)
+            #category = after.guild.get_role(settings.BOOSTER_CATEGORY)
+            #role = await after.guild.create_role(name=str(after.id), mentionable=True, reason=f'{after.name} boosted the server!')
+            #await role.edit(position=category.position - 1)
+            #await after.add_roles(role)
 
-            path = settings.DB_PATH + str(after.id) + '.json'
-            db = TinyDB(path)
-            member = Query()
-            table = db.table('boost')
+            #path = settings.DB_PATH + str(after.id) + '.json'
+            #db = TinyDB(path)
+            #member = Query()
+            #table = db.table('boost')
 
-            table.upsert({'role_id' : role.id}, member.role_id != None) #If conditional is True: update. If False: insert.
-            formatting.fancify(path)
+            #table.upsert({'role_id' : role.id}, member.role_id != None) #If conditional is True: update. If False: insert.
+            #formatting.fancify(path)
 
 
     async def unboost_upd(self, before, after):
@@ -221,6 +238,7 @@ class Events(commands.Cog):
             role_id = table.get(member.role_id != None)['role_id']
 
             table.remove(member.role_id != None)
+            table.remove(member.emote_id != None)
             formatting.fancify(path)
 
             role = after.guild.get_role(role_id)
