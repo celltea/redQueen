@@ -188,8 +188,5 @@ class Boost(commands.Cog):
         await ctx.send(content=f'{emote}\nHere\'s your new auto-react emote!')
 
 
-
-
-
 def setup(bot):
     bot.add_cog(Boost(bot))
