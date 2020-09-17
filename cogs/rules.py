@@ -43,7 +43,7 @@ class Rules(commands.Cog):
 
     @commands.command(help='noarg: prints the nitro dm')
     @commands.has_role(settings.VERIFIED_ROLE_ID)
-    async def boost(self, ctx):
+    async def boosting(self, ctx):
         await ctx.send(content=settings.BOOST_DM, delete_after=120)
         try:
             await ctx.message.delete()
