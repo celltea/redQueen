@@ -7,7 +7,7 @@ from utilities import settings
 
 settings = settings.config("settings.json")
 
-def getfromin(bot, ctx, mode, inp):
+def getfromin(bot, ctx, mode, inp): #Really wishing python had switch cases.
     if mode == 'use':
         try:
             out = bot.get_user(int(inp))
@@ -28,6 +28,11 @@ def getfromin(bot, ctx, mode, inp):
             out = bot.get_channel(int(inp))
         except ValueError:
             out = bot.get_channel(int(strip(inp)))
+    elif mode == 'emo':
+        try:
+            out = bot.get_emoji(int(inp))
+        except ValueError:
+            out = bot.get_emoji(int(strip(inp)))
     return out
 
 def strip(fancy):
