@@ -1,4 +1,5 @@
 import discord
+import asyncio
 
 from discord.ext import commands
 from utilities import formatting, settings
@@ -61,6 +62,7 @@ class Boost(commands.Cog):
         except TypeError:
             category = ctx.guild.get_role(settings.BOOSTER_CATEGORY)
             role = await ctx.guild.create_role(name=str(ctx.author.id), mentionable=True, color=discord.Color(hexadecimal), reason=f'{ctx.author.name} booster role create')
+            role_id = role.id
             await ctx.author.add_roles(role)
             await asyncio.sleep(1)
             await role.edit(position=category.position - 1)
@@ -109,7 +111,8 @@ class Boost(commands.Cog):
             role_id = table.get(member.role_id != None)['role_id'] 
         except TypeError:
             category = ctx.guild.get_role(settings.BOOSTER_CATEGORY)
-            role = await ctx.guild.create_role(name=name, mentionable=True, reason=f'{ctx.author.name} booster role create')
+            role = await ctx.guild.create_role(name=str(ctx.author.id), mentionable=True, reason=f'{ctx.author.name} booster role create')
+            role_id = role.id
             await ctx.author.add_roles(role)
             await asyncio.sleep(1)
             await role.edit(position=category.position - 1)
