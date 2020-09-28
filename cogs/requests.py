@@ -15,12 +15,7 @@ class Requests(commands.Cog):
     @commands.command()
     @commands.has_permissions(administrator=True)
     async def test1(self, ctx):
-        path = settings.DB_PATH + 'temp' + '.json'
-        db = TinyDB(path)
-        table = db.table('test')
-        member = Query()
-        table.upsert({'key2' : 666731127267917835}, member.test_key1 != None)
-        formatting.fancify(path)
+        await ctx.send(content=self.boost.name)
 
 
     @commands.command()
@@ -110,6 +105,12 @@ class Requests(commands.Cog):
     @commands.has_role(settings.VERIFIED_ROLE_ID)
     async def bing(self, ctx):
         await ctx.send('bong')
+
+
+    @commands.command(help='noarg')
+    @commands.has_role(settings.VERIFIED_ROLE_ID)
+    async def latency(self, ctx):
+        await ctx.send(content=f'Delay of discord client: **{round(self.bot.latency, 3)} seconds**')
 
 
     @commands.command(help='noarg: myka\'s request')
