@@ -280,7 +280,11 @@ class Events(commands.Cog):
         elif isinstance(errors, errors.MissingRole):
             await ctx.send(f'**Error:** {error} \n**-**You don\'t have the necessary role to use this command')
         else:
-            await ctx.send(f'**Error:** {error} \n**-**I didn\'t ever expect to see this error so I didn\'t write an exception for it. Please contact @Cat')
+            try:
+                await ctx.send(f'**Error:** {error} \n**-**I didn\'t ever expect to see this error so I didn\'t write an exception for it. Please contact @Cat')
+            except discord.HTTPException:
+                await ctx.send(f'**Error:** Please see console for full error\nI didn\'t ever expect to see this error so I didn\'t write an exception for it. Please contact @Cat')
+                print(error)
 
 
 def setup(bot):
