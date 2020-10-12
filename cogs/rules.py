@@ -49,6 +49,16 @@ class Rules(commands.Cog):
             await ctx.message.delete()
         except discord.Forbidden:
             pass
+
+    @commands.command(help='noarg: prints the welcome dm')
+    @commands.cooldown(rate='1', per='120', type=commands.BucketType.channel)
+    async def intro(self, ctx):
+        await ctx.send(content=settings.WELCOME1, delete_after=120)
+        await ctx.send(content=settings.WELCOME2, delete_after=120)
+        try:
+            await ctx.message.delete()
+        except discord.Forbidden:
+            pass
     
     
     @commands.command(help='noarg: prints the disboard advertisement')
