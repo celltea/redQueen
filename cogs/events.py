@@ -257,10 +257,18 @@ class Events(commands.Cog):
 
 
     @commands.Cog.listener()
-    async def on_member_update(self, before, after): #Assign here so shared vars avoid overlap
+    async def on_member_update(self, before, after):
         await Events.unv_upd(self, before, after)
         await Events.boost_upd(self, before, after)
         await Events.unboost_upd(self, before, after)
+
+
+    @commands.Cog.listener()
+    async def on_raw_reaction_add(self, payload):
+        if payload.message_id == settings.JOINER_RULES_REACT_ID and self.bot.get_emoji(settings.JOINER_RULES_EMOJI_ID) == payload.emoji: #
+            role = payload.member.guild.get_role(settings.UNVERIFIED_ROLE_ID)
+
+            await payload.member.add_roles(role, reason='unverified react')
 
 
     #catching updates... this is gonna suck
