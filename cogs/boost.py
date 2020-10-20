@@ -53,6 +53,10 @@ class Boost(commands.Cog):
             await ctx.send('Please choose to edit either the __color__ or __name__ of your role')
 
     @role.command(help='Booster only: (hexcode color)')
+    async def colour(self, ctx):
+        await ctx.send('Please choose to edit either the __color__ or __name__ of your role. Please remember to type the command in gramatically correct english')
+
+    @role.command(help='Booster only: (hexcode color)')
     async def color(self, ctx, hex_color):
         db = TinyDB(settings.DB_PATH + str(ctx.author.id) + '.json')
         table = db.table('boost')
