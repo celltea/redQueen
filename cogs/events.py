@@ -57,8 +57,7 @@ class Events(commands.Cog):
         await Events.periodic_push(self)
 
 
-    @commands.Cog.listener()
-    async def on_member_join(self, member):
+    async def log_block(self, member):
         channel = self.bot.get_channel(settings.TURNOVER_CHANNEL_ID)
 
         await channel.send(f':blue_heart: **__Joined:__** {member.mention} aka *{member.name}#{member.discriminator}* __\'{member.id}\'__ ')  
@@ -70,6 +69,18 @@ class Events(commands.Cog):
         table = db.table('information')
         table.upsert({'last_seen' : str(datetime.now().date())}, member.last_seen != None)
         formatting.fancify(path)
+
+
+    async def role_block(self, member):
+        role = member.guild.get_role(settings.JOINER_ROLE_ID)
+
+        await member.add_roles(role, reason='joined')
+
+
+    @commands.Cog.listener()
+    async def on_member_join(self, member):
+        await Events.log_block(self, member)
+        await Events.role_block(self, member)
     
 
     @commands.Cog.listener()
