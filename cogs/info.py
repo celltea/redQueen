@@ -104,7 +104,7 @@ class Info(commands.Cog):
 
         embed = discord.Embed(title='Avatar', color=0x64b4ff)
         embed.set_author(name=f'{user.name}#{user.discriminator}', icon_url=user.avatar_url)
-        embed.set_image(url=user.avatar_url_as(static_format='png', size=512))
+        embed.set_image(url=user.avatar_url_as(static_format='png'))
         embed.timestamp = ctx.message.created_at
 
         await ctx.send(embed=embed)
