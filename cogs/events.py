@@ -5,7 +5,7 @@ import sys
 
 from discord.ext.commands import errors
 from discord.ext import commands
-from datetime import datetime
+from datetime import datetime, date
 from utilities import settings, dbinteract, formatting
 from random import randint
 from tinydb import database, TinyDB, Query
@@ -17,6 +17,7 @@ class Events(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.members = []
+        self.ban_toggle = False
 
 
     #only works on cogs, will not apply any module updates
@@ -39,6 +40,12 @@ class Events(commands.Cog):
         dbinteract.activity_push(self.members, datetime.now().date())
         await ctx.send(content='shutting down')
         sys.exit()
+
+    @commands.command(help='no arg')
+    @commands.has_permissions(administrator=True)
+    async def toggle(self, ctx):
+        self.ban_toggle = not self.ban_toggle
+        await ctx.send(content=f'Users with accounts less than 10 minutes old are being banned: **{self.ban_toggle}**')
 
 
     async def periodic_push(self):
@@ -76,11 +83,20 @@ class Events(commands.Cog):
 
         await member.add_roles(role, reason='joined')
 
+    async def ban_toggle(self, member):
+        time_elapsed = datetime.utcnow() - member.created_at
+        if self.ban_toggle and time_elapsed.seconds <= 600:
+            await member.guild.ban(member)
+
+            greeter_talk = self.bot.get_channel(settings.GREETER_TALK_ID)
+            await greeter_talk.send(content=f'**{after.name}#{after.discriminator}** has been banned from the server for having an account that is {(time_elapsed)/60} minutes old')
+
 
     @commands.Cog.listener()
     async def on_member_join(self, member):
         await Events.log_block(self, member)
         await Events.role_block(self, member)
+        await Events.ban_toggle(self, member)
     
 
     @commands.Cog.listener()
@@ -145,9 +161,12 @@ class Events(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        await Events.disboard_onm(self, message)
-        await Events.boost_onm(self, message)
-        await Events.activity_upd(self, message)
+            await Events.disboard_onm(self, message)
+            await Events.activity_upd(self, message)
+            try:
+                await Events.boost_onm(self, message)
+            except: 
+                pass
         
 
 #    @commands.Cog.listener()
