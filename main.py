@@ -1,10 +1,12 @@
+import discord
 import os
 
 from discord.ext import commands
 from utilities import settings
 
 settings = settings.config("settings.json")
-bot = commands.Bot(command_prefix=',')
+intents = discord.Intents.all()
+bot = commands.Bot(command_prefix=',', intents=intents)
     
 for file in os.listdir(settings.COG_PATH):
     if file.endswith('.py'):
