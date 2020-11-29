@@ -94,6 +94,7 @@ class Events(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_join(self, member):
+        print("member joined")
         await Events.log_block(self, member)
         await Events.role_block(self, member)
         await Events.ban_toggle(self, member)
@@ -161,12 +162,12 @@ class Events(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
-            await Events.disboard_onm(self, message)
-            await Events.activity_upd(self, message)
-            try:
-                await Events.boost_onm(self, message)
-            except: 
-                pass
+        await Events.disboard_onm(self, message)
+        await Events.activity_upd(self, message)
+        try:
+            await Events.boost_onm(self, message)
+        except: 
+            pass
         
 
 #    @commands.Cog.listener()
@@ -193,7 +194,7 @@ class Events(commands.Cog):
         joiner_role = after.guild.get_role(settings.JOINER_ROLE_ID)
         unverified_role = after.guild.get_role(settings.UNVERIFIED_ROLE_ID)
         #checking when zira removes the joiner role to send the welcome message
-        if joiner_role in before.roles and joiner_role not in after.roles and unverified_role in after.roles:
+        if unverified_role not in before.roles and unverified_role in after.roles:
             channel = self.bot.get_channel(settings.WELCOME_CHANNEL_ID)
             staff_role = after.guild.get_role(settings.STAFF_ROLE_ID)
             greeter_role = after.guild.get_role(settings.GREETER_ROLE_ID)
@@ -285,10 +286,12 @@ class Events(commands.Cog):
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload):
         if payload.message_id == settings.JOINER_RULES_REACT_ID and self.bot.get_emoji(settings.JOINER_RULES_EMOJI_ID) == payload.emoji: #
-            role = payload.member.guild.get_role(settings.UNVERIFIED_ROLE_ID)
+            role_unv = payload.member.guild.get_role(settings.UNVERIFIED_ROLE_ID)
+            role_join = payload.member.guild.get_role(settings.JOINER_ROLE_ID)
 
-            await payload.member.add_roles(role, reason='unverified react')
-
+            await payload.member.add_roles(role_unv, reason='unverified react')
+            await payload.member.remove_roles(role_join, reason='unverified react')
+            
 
     #catching updates... this is gonna suck
     @commands.Cog.listener()
