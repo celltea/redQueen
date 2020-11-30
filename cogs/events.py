@@ -102,9 +102,8 @@ class Events(commands.Cog):
     @commands.Cog.listener()
     async def on_member_remove(self, member):
         channel = self.bot.get_channel(settings.TURNOVER_CHANNEL_ID)
-        user = self.bot.get_user(member.id)
 
-        await channel.send(f':heart: **__Left:__** {user.mention} aka *{user.name}#{member.discriminator}* __\'{member.id}\'__') 
+        await channel.send(f':heart: **__Left:__** {member.mention} aka *{member.name}#{member.discriminator}* __\'{member.id}\'__') 
 
         try: 
             self.members.pop(self.members.index(member.id))
