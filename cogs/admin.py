@@ -164,7 +164,7 @@ class Admin(commands.Cog):
         targets = []
         num = int(num)
 
-        async for message in channel.history(limit=quantity, before=timestamp):
+        async for message in channel.history(limit=num, before=timestamp):
             targets.append(message.author)
 
         for user in targets:
