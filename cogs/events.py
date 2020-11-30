@@ -94,7 +94,6 @@ class Events(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_join(self, member):
-        print("member joined")
         await Events.log_block(self, member)
         await Events.role_block(self, member)
         await Events.ban_toggle(self, member)
@@ -135,7 +134,7 @@ class Events(commands.Cog):
     async def boost_onm(self, message):
         try:
             booster_role = message.guild.get_role(settings.BOOSTER_ROLE_ID)
-        except AttributeError:
+        except AttributeError: #if the message is outside of the server
             return
         if booster_role in message.author.roles:
             seed = randint(1,100)
@@ -224,7 +223,6 @@ class Events(commands.Cog):
         booster_role = after.guild.get_role(settings.BOOSTER_ROLE_ID)
         verified_role = after.guild.get_role(settings.VERIFIED_ROLE_ID)
         unverified_role = after.guild.get_role(settings.UNVERIFIED_ROLE_ID)
-        temp_role = after.guild.get_role(666731127267917835)
         #checking when a user begins boosting the server
         verified_cond = booster_role in after.roles and booster_role not in before.roles and verified_role in after.roles #verified user boosts
         unverified_cond = unverified_role in before.roles and unverified_role not in after.roles and verified_role in after.roles and booster_role in after.roles #unverified user boosts
@@ -243,19 +241,6 @@ class Events(commands.Cog):
                 pass
 
             await general.send(embed=embed)
-
-            #category = after.guild.get_role(settings.BOOSTER_CATEGORY)
-            #role = await after.guild.create_role(name=str(after.id), mentionable=True, reason=f'{after.name} boosted the server!')
-            #await role.edit(position=category.position - 1)
-            #await after.add_roles(role)
-
-            #path = settings.DB_PATH + str(after.id) + '.json'
-            #db = TinyDB(path)
-            #member = Query()
-            #table = db.table('boost')
-
-            #table.upsert({'role_id' : role.id}, member.role_id != None) #If conditional is True: update. If False: insert.
-            #formatting.fancify(path)
 
 
     async def unboost_upd(self, before, after):
