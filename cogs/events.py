@@ -17,7 +17,14 @@ class Events(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.members = []
-        self.ban_toggle = False
+        self.ban_time = 0
+
+        #Object Constants (after initial assignment)
+        self.guild = None
+        self.booster_role = None
+        self.verified_role = None
+        self.unverified_role = None
+        self.joiner_role = None
 
 
     #only works on cogs, will not apply any module updates
@@ -31,7 +38,7 @@ class Events(commands.Cog):
                 name = file[:-3]
                 self.bot.reload_extension(f"cogs.{name}")
 
-        await ctx.send(content='cogs reloaded')
+        await ctx.send(content='cogs reloaded') 
 
     
     @commands.command(help='no arg: WARNING stops bot')
@@ -41,11 +48,14 @@ class Events(commands.Cog):
         await ctx.send(content='shutting down')
         sys.exit()
 
-    @commands.command(help='no arg')
+    @commands.command(help='Staff only: (minutes)')
     @commands.has_permissions(administrator=True)
-    async def toggle(self, ctx):
-        self.ban_toggle = not self.ban_toggle
-        await ctx.send(content=f'Users with accounts less than 10 minutes old are being banned: **{self.ban_toggle}**')
+    async def toggle(self, ctx, min=0):
+        self.ban_time = min
+        if self.ban_time:
+            await ctx.send(content=f"Users with accounts less than __{min} minutes__ old are being filtered")
+        else:
+            await ctx.send(content="Alternate account filtering is currently off")
 
 
     async def periodic_push(self):
@@ -79,17 +89,18 @@ class Events(commands.Cog):
 
 
     async def role_block(self, member):
-        role = member.guild.get_role(settings.JOINER_ROLE_ID)
+        role = self.guild.get_role(settings.JOINER_ROLE_ID)
 
         await member.add_roles(role, reason='joined')
 
     async def ban_toggle(self, member):
-        time_elapsed = datetime.utcnow() - member.created_at
-        if self.ban_toggle and time_elapsed.seconds <= 600:
-            await member.guild.ban(member)
+        if self.ban_time:
+            time_elapsed = datetime.utcnow() - member.created_at
+            if time_elapsed.seconds <= self.ban_time * 60:
+                await self.guild.ban(member)
 
-            greeter_talk = self.bot.get_channel(settings.GREETER_TALK_ID)
-            await greeter_talk.send(content=f'**{after.name}#{after.discriminator}** has been banned from the server for having an account that is {(time_elapsed)/60} minutes old')
+                greeter_talk = self.bot.get_channel(settings.GREETER_TALK_ID)
+                await greeter_talk.send(content=f'**{after.name}#{after.discriminator}** has been banned from the server for having an account that is {(time_elapsed)/60} minutes old')
 
 
     @commands.Cog.listener()
@@ -119,23 +130,20 @@ class Events(commands.Cog):
     async def disboard_onm(self, message):
     #disboard successful bump message
         if message.author.id == 302050872383242240 and str(message.embeds[0].color) == '#24b7b7' and ':thumbsup:' in message.embeds[0].description: 
-            role = message.guild.get_role(settings.SPEED_FINGERS_ID)
+            role = self.guild.get_role(settings.SPEED_FINGERS_ID)
             for member in role.members:
                 await member.remove_roles(role, reason='bump role')
 
             embed = message.embeds[0]
             i = embed.description.find(',')
             member_id = embed.description[2:(i-1)]
-            member = message.guild.get_member(int(member_id))
+            member = self.guild.get_member(int(member_id))
             await member.add_roles(role, reason='bump role')   
 
     
     async def boost_onm(self, message):
-        try:
-            booster_role = message.guild.get_role(settings.BOOSTER_ROLE_ID)
-        except AttributeError: #if the message is outside of the server
-            return
-        if booster_role in message.author.roles:
+        await Events.global_assignment(self)
+        if self.booster_role in message.author.roles:
             seed = randint(1,100)
             if seed <= 25: #5
                 db = TinyDB(settings.DB_PATH + str(message.author.id) + '.json')
@@ -173,7 +181,7 @@ class Events(commands.Cog):
 #
 #        if self.unverified_role in message.author.roles:
 #
-#            async for entry in message.guild.audit_logs(limit=1):
+#            async for entry in self.guild.audit_logs(limit=1):
 #                latest = entry
 #
 #            difference = datetime.utcnow() - latest.created_at
@@ -188,14 +196,13 @@ class Events(commands.Cog):
 
 
     async def unv_upd(self, before, after):
-        timestamp_now = datetime.utcnow() 
-        joiner_role = after.guild.get_role(settings.JOINER_ROLE_ID)
-        unverified_role = after.guild.get_role(settings.UNVERIFIED_ROLE_ID)
+        timestamp_now = datetime.utcnow()
+        await Events.global_assignment(self)
         #checking when zira removes the joiner role to send the welcome message
-        if unverified_role not in before.roles and unverified_role in after.roles:
+        if self.unverified_role not in before.roles and self.unverified_role in after.roles:
             channel = self.bot.get_channel(settings.WELCOME_CHANNEL_ID)
-            staff_role = after.guild.get_role(settings.STAFF_ROLE_ID)
-            greeter_role = after.guild.get_role(settings.GREETER_ROLE_ID)
+            staff_role = self.guild.get_role(settings.STAFF_ROLE_ID)
+            greeter_role = self.guild.get_role(settings.GREETER_ROLE_ID)
             welcome_channel = self.bot.get_channel(settings.WELCOME_CHANNEL_ID)
             unverified_rules = self.bot.get_channel(settings.UNVERIFIED_RULES_ID)
                 
@@ -215,16 +222,14 @@ class Events(commands.Cog):
                     pass
 
             else:
-                await welcome_channel.send(f'Welcome to {after.guild.name}, {after.mention} Please please please make sure you\'ve read over our {unverified_rules.mention}. You should be greeted by our {greeter_role.mention}s shortly. \nAdditionally if you have any questions feel free to ask {staff_role.mention}. I promise we don\'t bite :purple_heart: \nYou took *{elapsed_time}* to read the rules. ')
+                await welcome_channel.send(f'Welcome to {self.guild.name}, {after.mention} Please please please make sure you\'ve read over our {unverified_rules.mention}. You should be greeted by our {self.greeter_role.mention}s shortly. \nAdditionally if you have any questions feel free to ask {staff_role.mention}. I promise we don\'t bite :purple_heart: \nYou took *{elapsed_time}* to read the rules. ')
         
 
     async def boost_upd(self, before, after):
-        booster_role = after.guild.get_role(settings.BOOSTER_ROLE_ID)
-        verified_role = after.guild.get_role(settings.VERIFIED_ROLE_ID)
-        unverified_role = after.guild.get_role(settings.UNVERIFIED_ROLE_ID)
+        await Events.global_assignment(self)
         #checking when a user begins boosting the server
-        verified_cond = booster_role in after.roles and booster_role not in before.roles and verified_role in after.roles #verified user boosts
-        unverified_cond = unverified_role in before.roles and unverified_role not in after.roles and verified_role in after.roles and booster_role in after.roles #unverified user boosts
+        verified_cond = self.booster_role in after.roles and self.booster_role not in before.roles and self.verified_role in after.roles #verified user boosts
+        unverified_cond = self.unverified_role in before.roles and self.unverified_role not in after.roles and self.verified_role in after.roles and self.booster_role in after.roles #unverified user boosts
         if verified_cond or unverified_cond:
             embed = discord.Embed(title='Server Boost!', description=f'{after.mention} boosted the server!', color=0xe164e1)
             embed.set_thumbnail(url=after.avatar_url)
@@ -243,9 +248,8 @@ class Events(commands.Cog):
 
 
     async def unboost_upd(self, before, after):
-        booster_role = after.guild.get_role(settings.BOOSTER_ROLE_ID)
-        verified_role = after.guild.get_role(settings.VERIFIED_ROLE_ID)
-        if booster_role in after.roles and booster_role not in before.roles and verified_role in after.roles:
+        await Events.global_assignment(self)
+        if self.booster_role in after.roles and self.booster_role not in before.roles and self.verified_role in after.roles:
             path = settings.DB_PATH + str(after.id) + '.json'
             db = TinyDB(path)
             table = db.table('boost')
@@ -256,7 +260,7 @@ class Events(commands.Cog):
             table.remove(member.emote_id != None)
             formatting.fancify(path)
 
-            role = after.guild.get_role(role_id)
+            role = self.guild.get_role(role_id)
             await role.delete(reason=f'{before.name} is not longer boosting')
 
 
@@ -269,12 +273,21 @@ class Events(commands.Cog):
 
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload):
-        if payload.message_id == settings.JOINER_RULES_REACT_ID and self.bot.get_emoji(settings.JOINER_RULES_EMOJI_ID) == payload.emoji: #
-            role_unv = payload.member.guild.get_role(settings.UNVERIFIED_ROLE_ID)
-            role_join = payload.member.guild.get_role(settings.JOINER_ROLE_ID)
+        if payload.message_id == settings.JOINER_RULES_REACT_ID and self.bot.get_emoji(settings.JOINER_RULES_EMOJI_ID) == payload.emoji:
+            role_unv = self.guild.get_role(settings.UNVERIFIED_ROLE_ID)
+            role_join = self.guild.get_role(settings.JOINER_ROLE_ID)
 
             await payload.member.add_roles(role_unv, reason='unverified react')
             await payload.member.remove_roles(role_join, reason='unverified react')
+
+    
+    async def global_assignment(self):
+            if not self.guild:
+                self.guild = self.bot.get_guild(settings.GUILD_ID)
+                self.booster_role = self.guild.get_role(settings.BOOSTER_ROLE_ID)
+                self.verified_role = self.guild.get_role(settings.VERIFIED_ROLE_ID)
+                self.unverified_role = self.guild.get_role(settings.UNVERIFIED_ROLE_ID)
+                self.joiner_role = self.guild.get_role(settings.JOINER_ROLE_ID)
             
 
     #catching updates... this is gonna suck
