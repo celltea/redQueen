@@ -62,6 +62,26 @@ class Events(commands.Cog):
         else:
             await ctx.send(content="Alternate account filtering is currently off")
 
+    
+    @commands.command(help='Staff only: (member)')
+    @commands.has_permissions(administrator=True)
+    async def pardon(self, ctx, member):
+        member = formatting.getfromin(self.bot, ctx, 'mem', member)
+        try:
+            self.warnings[0].remove(member.id)
+        except ValueError: #They gotta be in one of the arrays if we're at this point in the code.
+            try:
+                self.warnings[1].remove(member.id)
+            except ValueError:
+                pass
+
+        embed = discord.Embed(description=f'**{member.mention} has had their warnings removed**', color=0x64ff64)
+        embed.set_author(name=f'{member.name}#{member.discriminator}', icon_url=member.avatar_url)
+        embed.set_thumbnail(url=member.avatar_url)
+        embed.timestamp = ctx.message.created_at
+
+        await ctx.send(embed=embed)
+
 
     async def periodic_push(self):
         duration = (datetime.max - datetime.today()).seconds + 5
@@ -214,13 +234,16 @@ class Events(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        await Events.chat_filter(self, message)
-        await Events.disboard_onm(self, message)
-        await Events.activity_upd(self, message)
-        try:
-            await Events.boost_onm(self, message)
-        except: 
-            pass
+        if message.author.bot:
+            return
+        if message.guild.id == settings.GUILD_ID:
+            await Events.chat_filter(self, message)
+            await Events.disboard_onm(self, message)
+            await Events.activity_upd(self, message)
+            try:
+                await Events.boost_onm(self, message)
+            except: 
+                pass
 
 
     async def unv_upd(self, before, after):
@@ -313,8 +336,17 @@ class Events(commands.Cog):
     async def on_message_edit(self, before, after):
         if self.unverified_role in after.author.roles:
             await Events.embed_log_edit(self, 0x64b4ff, after.author, "Unverified message edit")
-            self.embed_log.add_field(name='Before', value=before.content)
+            if len(before.content) > 300:
+                content = before.content[0:300] + "..."
+            else:
+                content = before.content
+            self.embed_log.add_field(name='Before', value=content)
+            if len(after.content) > 300:
+                content = after.content[0:300] + "..."
+            else:
+                content = after.content
             self.embed_log.add_field(name='After', value=after.content)
+            self.embed_log.clear_fields()
             await self.log_channel.send(embed=self.embed_log)
 
 
@@ -334,7 +366,11 @@ class Events(commands.Cog):
             mod_log_cond = latest_log.embeds[0].author.icon_url != message.author.avatar_url and log_difference.total_seconds() > 2
             if audit_log_cond and mod_log_cond :
                 await Events.embed_log_edit(self, 0x64b4ff, message.author, "Unverified message delete")
-                self.embed_log.add_field(name='Message', value=message.content)
+                if len(message.content) > 300:
+                    content = message.content[0:300] + "..."
+                else:
+                    content = message.content
+                self.embed_log.add_field(name='Message', value=content)
                 await self.log_channel.send(embed=self.embed_log)
                 self.embed_log.clear_fields()
 
