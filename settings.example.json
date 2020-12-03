@@ -13,6 +13,7 @@
     "MOD_LOG_ID" : 000000000000000000,
     "BOT_COMMANDS_ID" : 000000000000000000,
     "GENERAL_ID" : 000000000000000000,
+    "GREETER_TALK_ID" : 000000000000000000,
 
     "UNVERIFIED_ROLE_ID" : 000000000000000000,
     "MUTED_ROLE_ID" : 000000000000000000,
@@ -25,13 +26,20 @@
     "SPEED_FINGERS_ID" : 000000000000000000,
     "MARINATED_ROLE_ID" : 000000000000000000,
     "BOOSTER_CATEGORY" : 000000000000000000,
+
+    "JOINER_RULES_REACT_ID" : 000000000000000000, 
+    "JOINER_RULES_EMOJI_ID" : 000000000000000000,
     
-    "VERIFYING_RULES" : "rules_regarding_verification"
-	"TRANSGENDER_RULES" : "rules_regarding_transgender_women"
-    "AGE_RULES" : "rules_regarding_age_limit"
+    "VERIFYING_RULES" : "rules_regarding_verification",
+	"TRANSGENDER_RULES" : "rules_regarding_transgender_women",
+    "AGE_RULES" : "rules_regarding_age_limit",
 	
-    "BOOST_DM" : "information_about_server_boosting"
-	"ADVERTISEMENT" : "information_about_server_advertisements"
-    "WELCOME1" : "welcome_message_pt1"
-    "WELCOME2" : "welcome_message_pt2: only necessary if pt1 > 2000 characters"
+    "BOOST_DM" : "information_about_server_boosting",
+	"ADVERTISEMENT" : "information_about_server_advertisements",
+    "WELCOME1" : "welcome_message_pt1",
+    "WELCOME2" : "welcome_message_pt2: only necessary if pt1 > 2000 characters",
+
+    "NAME_BLACKLIST" : ["example1", "example2"],
+    "CHAT_BLACKLIST" : ["example1", "example2"], //See README in parent directory for instructions on how to set up black & grey lists.
+    "CHAT_GREYLIST" : ["example1", "example2"]
 }
