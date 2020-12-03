@@ -14,3 +14,7 @@ The previously mentioned package(s) can be installed onto either the global path
 ###### Note
 
 Much of this project references ID's. Viewing of these can be enabled in the client via `Settings > Appearance > Advanced > Developer Mode` and right-clicking elements of discord (Users, Channels, Messages, etc.). Most of these elements will have a context menu option that says "Copy ID". These are used throughout redQueen's commands and settings.json file.
+
+###### Chat filter setup
+
+The chat filter ignores a handful of characters. Entries into the black/greylists should account for these (or have their call adapted to account for them). It's encouraged to look at the functionality of simplify() in /utilities/formatting.py to understand what should be included in settings.json. Black/greylist entries should not include spaces, capitilization, or trailing "s" on a word (i.e. use "test" instead of "tests" if you wanted to blacklist both). Non alphabetic-symbols (including numbers) are ignored or translated by the program so they shouldn't be included in the entries.
