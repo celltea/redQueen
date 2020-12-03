@@ -88,13 +88,13 @@ class Info(commands.Cog):
         embed = discord.Embed(title='Who In', color=0x64b4ff)
         embed.set_author(name=f'{ctx.author.name}#{ctx.author.discriminator}', icon_url=f'{ctx.author.avatar_url}')
         embed.add_field(name='Role', value=f'{role.mention}', inline=False)
-        embed.add_field(name='Users', value=f'{members}')
+        embed.add_field(name='Users', value=f'{members[0:-1]}')
         embed.timestamp = ctx.message.created_at
             
         try:
             await ctx.send(embed=embed)
         except discord.HTTPException:
-            await ctx.send(f'**Error:** Too many users have this role to send the message through discord. Consider using ,cleanupgen instead')
+            await ctx.send(f'**Error:** Too many users (or none) have this role to send the message through discord. Consider using ,cleanupgen instead')
 
 
     @commands.command(aliases=['av', 'pfp'], help='(user)')
