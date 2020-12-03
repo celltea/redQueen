@@ -50,7 +50,7 @@ def simplify(string):
     out = ""
     for char in string:
         if char in allowed_char:
-            if char == " " and out[-1] == "s"
+            if char == " " and out[-1] == "s":
                 out = out[0:-1] + char
             else: 
                 out = out + char
