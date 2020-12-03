@@ -1,11 +1,14 @@
 import json
 
-from math import trunc
 from datetime import datetime
 from discord.ext import commands
+from math import trunc
+from string import ascii_letters, digits
 from utilities import settings
 
 settings = settings.config("settings.json")
+allowed_char = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+trans_table = {49 : 105, 51 : 101, 52 : 97, 53 : 115, 55 : 116, 56 : 98, 48 : 111}
 
 def getfromin(bot, ctx, mode, inp): #Really wishing python had switch cases.
     if mode == 'use':
@@ -42,6 +45,16 @@ def strip(fancy):
             return(None)
         fancy = fancy[1:]
     return(fancy)
+
+def simplify(string):
+    out = ""
+    for char in string:
+        if char in allowed_char:
+            if char == " " and out[-1] == "s"
+                out = out[0:-1] + char
+            else: 
+                out = out + char
+    return out.lower().translate(trans_table)
 
 def fancify(fname):
     with open(fname, 'r') as read_file:
