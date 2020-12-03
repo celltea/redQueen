@@ -6,7 +6,7 @@ import sys
 from discord.ext.commands import errors
 from discord.ext import commands
 from datetime import datetime, date
-from utilities import settings, dbinteract, formatting
+from utilities import settings, dbinteract, formatting  
 from random import randint
 from tinydb import database, TinyDB, Query
 
@@ -18,9 +18,14 @@ class Events(commands.Cog):
         self.bot = bot
         self.members = []
         self.ban_time = 0
+        self.warnings = [[], []]
+
+        #Embed Log Constant (change name & color when )
+        self.embed_log = None
 
         #Object Constants (after initial assignment)
         self.guild = None
+        self.log_channel = None
         self.booster_role = None
         self.verified_role = None
         self.unverified_role = None
@@ -70,7 +75,6 @@ class Events(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         print(f'{self.bot.user.name} has connected succesfully!')
-
         await Events.periodic_push(self)
 
 
@@ -126,6 +130,48 @@ class Events(commands.Cog):
         except OSError:
             pass
 
+    
+    async def chat_warn(self, message, ban=False):
+        await Events.global_assignment(self)
+        author = message.author
+        
+        if author.id in self.warnings[0]:
+            self.warnings[0].remove(author.id)
+            self.warnings[1].append(author.id)
+        elif author.id in self.warnings[1]:
+            ban = True
+        else:
+            self.warnings[0].append(author.id)
+            
+        embed = discord.Embed(description=f'You have been warned for your previous message {author.mention}', color=0xfefefe)
+        embed.set_author(name=f'{author.name}{author.discriminator}', icon_url=author.avatar_url)
+        await message.channel.send(embed=embed)
+
+        await Events.embed_log_edit(self, 0xeeee30, message.author, "Message contains blacklisted word(s)")
+        self.embed_log.add_field(name='Message', value=message.content, inline=True)
+        await self.log_channel.send(embed=self.embed_log)
+        self.embed_log.clear_fields()
+
+        await message.delete()
+
+        if ban:
+            await author.ban(delete_message_days=0)
+            try:
+                self.warnings[0].remove(author.id)
+            except ValueError: #They gotta be in one of the arrays if we're at this point in the code.
+                self.warnings[1].remove(author.id)
+
+
+    async def chat_filter(self, message):
+        if self.unverified_role in message.author.roles:
+            content = formatting.simplify(message.content)
+
+            if any(string in content for string in settings.CHAT_BLACKLIST): #Blacklisted words are automatic bans
+                await Events.chat_warn(self, message, True)
+
+            if any(string in content for string in settings.CHAT_GREYLIST): #Greylisted words are warnings
+                await Events.chat_warn(self, message)
+
 
     async def disboard_onm(self, message):
     #disboard successful bump message
@@ -139,6 +185,11 @@ class Events(commands.Cog):
             member_id = embed.description[2:(i-1)]
             member = self.guild.get_member(int(member_id))
             await member.add_roles(role, reason='bump role')   
+
+
+    async def activity_upd(self, message):
+        if message.author.id not in self.members:
+            self.members.append(message.author.id)
 
     
     async def boost_onm(self, message):
@@ -159,47 +210,24 @@ class Events(commands.Cog):
                 except discord.errors.InvalidArgument:
                     await message.author.create_dm()
                     await message.author.dm_channel.send(content=f'Your custom booster emote has been removed, please choose a new one using ```,boost emote (emote)```')
-
-
-    async def activity_upd(self, message):
-        if message.author.id not in self.members:
-            self.members.append(message.author.id)
-
+            
 
     @commands.Cog.listener()
     async def on_message(self, message):
+        await Events.chat_filter(self, message)
         await Events.disboard_onm(self, message)
         await Events.activity_upd(self, message)
         try:
             await Events.boost_onm(self, message)
         except: 
             pass
-        
-
-#    @commands.Cog.listener()
-#    async def on_message_delete(self, message):
-#
-#        if self.unverified_role in message.author.roles:
-#
-#            async for entry in self.guild.audit_logs(limit=1):
-#                latest = entry
-#
-#            difference = datetime.utcnow() - latest.created_at
-#            if message.author == latest.target and difference.total_seconds() <= 3:
-#                pass
-#
-#            else:
-#                channel = self.bot.get_channel(MOD_LOG_ID)
-#                await channel.send(f'__{message.author}__ deleted: {message.content}')
-#        else:
-#            pass
 
 
     async def unv_upd(self, before, after):
         timestamp_now = datetime.utcnow()
         await Events.global_assignment(self)
         #checking when zira removes the joiner role to send the welcome message
-        if self.unverified_role not in before.roles and self.unverified_role in after.roles:
+        if self.unverified_role not in before.roles and self.joiner_role in before.roles and self.unverified_role in after.roles:
             channel = self.bot.get_channel(settings.WELCOME_CHANNEL_ID)
             staff_role = self.guild.get_role(settings.STAFF_ROLE_ID)
             greeter_role = self.guild.get_role(settings.GREETER_ROLE_ID)
@@ -222,7 +250,7 @@ class Events(commands.Cog):
                     pass
 
             else:
-                await welcome_channel.send(f'Welcome to {self.guild.name}, {after.mention} Please please please make sure you\'ve read over our {unverified_rules.mention}. You should be greeted by our {self.greeter_role.mention}s shortly. \nAdditionally if you have any questions feel free to ask {staff_role.mention}. I promise we don\'t bite :purple_heart: \nYou took *{elapsed_time}* to read the rules. ')
+                await welcome_channel.send(f'Welcome to {self.guild.name}, {after.mention} Please please please make sure you\'ve read over our {unverified_rules.mention}. You should be greeted by our {greeter_role.mention}s shortly. \nAdditionally if you have any questions feel free to ask {staff_role.mention}. I promise we don\'t bite :purple_heart: \nYou took *{elapsed_time}* to read the rules. ')
         
 
     async def boost_upd(self, before, after):
@@ -270,6 +298,45 @@ class Events(commands.Cog):
         await Events.boost_upd(self, before, after)
         await Events.unboost_upd(self, before, after)
 
+    
+    @commands.Cog.listener()
+    async def on_member_ban(self, guild, user):
+        await Events.embed_log_edit(self, 0xff6464, user, "Banned")
+        await self.log_channel.send(embed=self.embed_log)
+
+    @commands.Cog.listener()
+    async def on_member_unban(self, guild, user):
+        await Events.embed_log_edit(self, 0x64ff64, user, "Unbanned")
+        await self.log_channel.send(embed=self.embed_log) 
+
+    @commands.Cog.listener()
+    async def on_message_edit(self, before, after):
+        if self.unverified_role in after.author.roles:
+            await Events.embed_log_edit(self, 0x64b4ff, after.author, "Unverified message edit")
+            self.embed_log.add_field(name='Before', value=before.content)
+            self.embed_log.add_field(name='After', value=after.content)
+            await self.log_channel.send(embed=self.embed_log)
+
+
+    @commands.Cog.listener()
+    async def on_message_delete(self, message):
+
+        if self.unverified_role in message.author.roles:
+
+            async for entry in self.guild.audit_logs(limit=1):
+                latest_audit = entry
+            audit_difference = datetime.utcnow() - latest_audit.created_at
+
+            latest_log = await self.log_channel.fetch_message(self.log_channel.last_message_id)
+            log_difference = datetime.utcnow() - latest_log.created_at
+
+            audit_log_cond = message.author != latest_audit.target and audit_difference.total_seconds() > 2
+            mod_log_cond = latest_log.embeds[0].author.icon_url != message.author.avatar_url and log_difference.total_seconds() > 2
+            if audit_log_cond and mod_log_cond :
+                await Events.embed_log_edit(self, 0x64b4ff, message.author, "Unverified message delete")
+                self.embed_log.add_field(name='Message', value=message.content)
+                await self.log_channel.send(embed=self.embed_log)
+                self.embed_log.clear_fields()
 
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload):
@@ -278,16 +345,37 @@ class Events(commands.Cog):
             role_join = self.guild.get_role(settings.JOINER_ROLE_ID)
 
             await payload.member.add_roles(role_unv, reason='unverified react')
-            await payload.member.remove_roles(role_join, reason='unverified react')
+            try:
+                await payload.member.remove_roles(role_join, reason='unverified react')
+            except AttributeError as e:
+                print(f'Error: {e}') #if she removes bans them too quickly then this should throw. Not sure if this is causing the error that comes up here or not.
 
     
     async def global_assignment(self):
-            if not self.guild:
-                self.guild = self.bot.get_guild(settings.GUILD_ID)
-                self.booster_role = self.guild.get_role(settings.BOOSTER_ROLE_ID)
-                self.verified_role = self.guild.get_role(settings.VERIFIED_ROLE_ID)
-                self.unverified_role = self.guild.get_role(settings.UNVERIFIED_ROLE_ID)
-                self.joiner_role = self.guild.get_role(settings.JOINER_ROLE_ID)
+        if not self.guild:
+            self.guild = self.bot.get_guild(settings.GUILD_ID)
+            self.log_channel = self.bot.get_channel(settings.MOD_LOG_ID)
+            self.booster_role = self.guild.get_role(settings.BOOSTER_ROLE_ID)
+            self.verified_role = self.guild.get_role(settings.VERIFIED_ROLE_ID)
+            self.unverified_role = self.guild.get_role(settings.UNVERIFIED_ROLE_ID)
+            self.joiner_role = self.guild.get_role(settings.JOINER_ROLE_ID)
+
+
+    async def embed_log_assignment(self):
+            if not self.embed_log:
+                self.embed_log = discord.Embed(description='Action taken', color=0x64b4ff)
+
+    
+    async def embed_log_edit(self, color, target, action):
+        """
+        :type color: Hexcode representing color
+        :type target: Discord Member/User object
+        :type action: String - Ban, Kick, Warn, etc.
+        """
+        self.embed_log = discord.Embed(description=f'{target.mention} - **{action}**', color=color)
+        self.embed_log.set_author(name=f'{target.name}#{target.discriminator}', icon_url=target.avatar_url)
+        self.embed_log.set_thumbnail(url=target.avatar_url)
+        self.embed_log.timestamp = datetime.utcnow()
             
 
     #catching updates... this is gonna suck
