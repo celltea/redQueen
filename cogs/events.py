@@ -18,7 +18,7 @@ class Events(commands.Cog):
         self.bot = bot
         self.members = []
         self.ban_time = 0
-        self.warnings = [[], []]
+        self.warnings = []
 
         #Embed Log Constant (change name & color when )
         self.embed_log = None
@@ -70,11 +70,7 @@ class Events(commands.Cog):
         try:
             self.warnings[0].remove(member.id)
         except ValueError: #They gotta be in one of the arrays if we're at this point in the code.
-            try:
-                self.warnings[1].remove(member.id)
-            except ValueError:
-                pass
-
+            pass
         embed = discord.Embed(description=f'**{member.mention} has had their warnings removed**', color=0x64ff64)
         embed.set_author(name=f'{member.name}#{member.discriminator}', icon_url=member.avatar_url)
         embed.set_thumbnail(url=member.avatar_url)
@@ -151,23 +147,20 @@ class Events(commands.Cog):
             pass
 
     
-    async def chat_warn(self, message, ban=False):
+    async def chat_warn(self, message, reason, ban=False):
         await Events.global_assignment(self)
         author = message.author
         
-        if author.id in self.warnings[0]:
-            self.warnings[0].remove(author.id)
-            self.warnings[1].append(author.id)
-        elif author.id in self.warnings[1]:
+        if author.id in self.warnings:
             ban = True
         else:
-            self.warnings[0].append(author.id)
+            self.warnings.append(author.id)
             
         embed = discord.Embed(description=f'You have been warned for your previous message {author.mention}', color=0xfefefe)
         embed.set_author(name=f'{author.name}{author.discriminator}', icon_url=author.avatar_url)
         await message.channel.send(embed=embed)
 
-        await Events.embed_log_edit(self, 0xeeee30, message.author, "Message contains blacklisted word(s)")
+        await Events.embed_log_edit(self, 0xeeee30, message.author, reason)
         self.embed_log.add_field(name='Message', value=message.content, inline=True)
         await self.log_channel.send(embed=self.embed_log)
         self.embed_log.clear_fields()
@@ -177,9 +170,45 @@ class Events(commands.Cog):
         if ban:
             await author.ban(delete_message_days=0)
             try:
-                self.warnings[0].remove(author.id)
-            except ValueError: #They gotta be in one of the arrays if we're at this point in the code.
-                self.warnings[1].remove(author.id)
+                self.warnings.remove(author.id)
+            except ValueError:
+                pass
+
+    async def link_warn(self, message, urls, ban=False):
+        await Events.global_assignment(self)
+        author = message.author
+        
+        if author.id in self.warnings:
+            ban = True
+        else:
+            self.warnings.append(author.id)
+            
+        embed = discord.Embed(description=f'You have been warned for your previous message {author.mention}', color=0xfefefe)
+        embed.set_author(name=f'{author.name}{author.discriminator}', icon_url=author.avatar_url)
+        await message.channel.send(embed=embed)
+
+        await Events.embed_log_edit(self, 0xeeee30, message.author, "Message contains link")
+        await message.delete()
+        i = 1
+        obv_url = True
+        for url in urls:
+            if obv_url:
+                obv_url = formatting.is_ascii(url)
+            self.embed_log.add_field(name=f'Link - {i}', value=url, inline=True)
+            i += 1
+
+        if not obv_url:
+            self.embed_log.set_footer(text='WARNING: LINK MAY BE MALICIOUS', icon_url='https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/twitter/259/exclamation-mark_2757.png')
+
+        await self.log_channel.send(embed=self.embed_log)
+        self.embed_log.clear_fields()
+
+        if ban:
+            await author.ban(delete_message_days=0)
+            try:
+                self.warnings.remove(author.id)
+            except ValueError:
+                pass     
 
 
     async def chat_filter(self, message):
@@ -187,10 +216,15 @@ class Events(commands.Cog):
             content = formatting.simplify(message.content)
 
             if any(string in content for string in settings.CHAT_BLACKLIST): #Blacklisted words are automatic bans
-                await Events.chat_warn(self, message, True)
+                await Events.chat_warn(self, message, "Message contains blacklisted word(s)", True)
 
             if any(string in content for string in settings.CHAT_GREYLIST): #Greylisted words are warnings
-                await Events.chat_warn(self, message)
+                await Events.chat_warn(self, message, "Message contains blacklisted word(s)")
+
+            urls = formatting.url_find(message.content)
+            if urls:
+                await Events.link_warn(self, message, urls)
+
 
 
     async def disboard_onm(self, message):
