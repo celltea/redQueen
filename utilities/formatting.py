@@ -3,11 +3,12 @@ import json
 from datetime import datetime
 from discord.ext import commands
 from math import trunc
+from re import findall
 from string import ascii_letters, digits
 from utilities import settings
 
 settings = settings.config("settings.json")
-allowed_char = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+allowed_char = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ "
 trans_table = {49 : 105, 51 : 101, 52 : 97, 53 : 115, 55 : 116, 56 : 98, 48 : 111}
 
 def getfromin(bot, ctx, mode, inp): #Really wishing python had switch cases.
@@ -127,3 +128,11 @@ def date_difference(pastest, presentest=None):
 
     else:
         return('Today')
+
+def url_find(string):
+    regex = r"(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?«»“”‘’]))"
+    url = findall(regex,string)       
+    return [x[0] for x in url]
+
+def is_ascii(s):
+    return all(ord(c) < 128 for c in s)
