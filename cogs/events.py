@@ -268,9 +268,7 @@ class Events(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        if message.author.bot:
-            return
-        if message.guild.id == settings.GUILD_ID:
+        if message.guild.id == settings.GUILD_ID and  message.author.id != self.bot.user.id:
             await Events.chat_filter(self, message)
             await Events.disboard_onm(self, message)
             await Events.activity_upd(self, message)
