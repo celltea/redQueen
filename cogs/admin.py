@@ -19,12 +19,12 @@ class Admin(commands.Cog):
     @commands.command(help='Interviewer only: (member) (duration in minutes)')
     @commands.check_any(commands.has_role(settings.INTERVIEWER_ROLE_ID), commands.has_role(settings.STAFF_ROLE_ID))
     async def timeout(self, ctx, user, duration):
-        member = formatting.getfromin(self.bot, ctx, 'mem', user)
+        member = formatting.get_from_in(self.bot, ctx, 'mem', user)
         verified = ctx.guild.get_role(settings.VERIFIED_ROLE_ID)
         staff = ctx.guild.get_role(settings.STAFF_ROLE_ID)
 
         if staff not in ctx.author.roles and verified in member.roles:
-            await ctx.send(content='Interviewers cannot target Verified users with this command')
+            await ctx.send  (content='Interviewers cannot target Verified users with this command')
         else:
 
             role = ctx.guild.get_role(settings.MUTED_ROLE_ID)
@@ -51,7 +51,7 @@ class Admin(commands.Cog):
     @commands.command(help='Staff only: (role)')
     @commands.has_permissions(administrator=True)
     async def cleanupgen(self, ctx, role):
-        role = formatting.getfromin(self.bot, ctx, "rol", role)
+        role = formatting.get_from_in(self.bot, ctx, "rol", role)
         member_list = role.members
         cleanup_file = open(settings.CLEANUP_PATH, 'w+')
         i = 0
@@ -73,12 +73,12 @@ class Admin(commands.Cog):
 
                 cleanup_file.write(f'{name}, "{member_id}", {joined}, {last_seen}, {nitro}\n')
         await ctx.send(content=f'Please see the console. There were {len(member_list)} user(s)', file=discord.File(fp=settings.CLEANUP_PATH, filename=settings.CLEANUP_PATH))
-    
+
 
     @commands.command(aliases=['unwelcome'], help='Interviewer only: (user) (reason)')
     @commands.check_any(commands.has_role(settings.INTERVIEWER_ROLE_ID), commands.has_role(settings.STAFF_ROLE_ID))
     async def kick(self, ctx, member, *, reason = None):
-        member = formatting.getfromin(self.bot, ctx, "mem", member)
+        member = formatting.get_from_in(self.bot, ctx, "mem", member)
         
         verified = ctx.guild.get_role(settings.VERIFIED_ROLE_ID)
         staff = ctx.guild.get_role(settings.STAFF_ROLE_ID)
@@ -113,8 +113,8 @@ class Admin(commands.Cog):
     @commands.command(help='Interviewer only: (user) (reason)')
     @commands.check_any(commands.has_role(settings.INTERVIEWER_ROLE_ID), commands.has_role(settings.STAFF_ROLE_ID))
     async def ban(self, ctx, userin, *, reason = None):
-        user = formatting.getfromin(self.bot, ctx, "use", userin)
-        member = formatting.getfromin(self.bot, ctx, "mem", userin)
+        user = formatting.get_from_in(self.bot, ctx, "use", userin)
+        member = formatting.get_from_in(self.bot, ctx, "mem", userin)
         verified = ctx.guild.get_role(settings.VERIFIED_ROLE_ID)
         staff = ctx.guild.get_role(settings.STAFF_ROLE_ID)
 
@@ -144,7 +144,7 @@ class Admin(commands.Cog):
     @commands.command(help='Interviewer only: (user)')
     @commands.check_any(commands.has_role(settings.INTERVIEWER_ROLE_ID), commands.has_role(settings.STAFF_ROLE_ID))
     async def unban(self, ctx, user):
-        user = formatting.getfromin(self.bot, ctx, "use", user)
+        user = formatting.get_from_in(self.bot, ctx, "use", user)
 
         embed = discord.Embed(title='Server Unban', color=0x64ff64)
         embed.set_author(name=f'{user.name}#{user.discriminator}', icon_url=user.avatar_url)
@@ -231,7 +231,7 @@ class Admin(commands.Cog):
         self.queue_position = 1
 
         for user in user_ids:
-            user = formatting.getfromin(self.bot, ctx, "use", user)
+            user = formatting.get_from_in(self.bot, ctx, "use", user)
 
             self.queue = self.queue + f'{self.queue_position}. {user.name}#{user.discriminator}\n'
             self.queue_position = self.queue_position + 1
@@ -259,7 +259,7 @@ class Admin(commands.Cog):
                 id_build = id_build + char
 
         for user in user_ids:
-            user = formatting.getfromin(self.bot, ctx, "use", user)
+            user = formatting.get_from_in(self.bot, ctx, "use", user)
                 
             self.queue = self.queue + f'{self.queue_position}. {user.name}#{user.discriminator}\n'
             self.queue_position = self.queue_position + 1
@@ -307,7 +307,7 @@ class Admin(commands.Cog):
     @commands.command(help='Interviewer only: (member)')
     @commands.has_role(settings.INTERVIEWER_ROLE_ID)
     async def welcome(self, ctx, *, member):
-        member = formatting.getfromin(self.bot, ctx, "mem", member)
+        member = formatting.get_from_in(self.bot, ctx, "mem", member)
         unverified_role = ctx.guild.get_role(settings.UNVERIFIED_ROLE_ID)
         verified_role = ctx.guild.get_role(settings.VERIFIED_ROLE_ID)
         
@@ -335,7 +335,7 @@ class Admin(commands.Cog):
     @commands.command(help='Marinated only: (member)')
     @commands.check_any(commands.has_role(settings.INTERVIEWER_ROLE_ID), commands.has_role(settings.STAFF_ROLE_ID), commands.has_role(settings.MARINATED_ROLE_ID))
     async def mute(self, ctx, member):
-        member = formatting.getfromin(self.bot, ctx, "mem", member)
+        member = formatting.get_from_in(self.bot, ctx, "mem", member)
         verified = ctx.guild.get_role(settings.VERIFIED_ROLE_ID)
         staff = ctx.guild.get_role(settings.STAFF_ROLE_ID)
 
@@ -357,7 +357,7 @@ class Admin(commands.Cog):
     @commands.command(help='Marinated only: (member)')
     @commands.check_any(commands.has_role(settings.INTERVIEWER_ROLE_ID), commands.has_role(settings.STAFF_ROLE_ID), commands.has_role(settings.MARINATED_ROLE_ID))
     async def unmute(self, ctx, member):
-        member = formatting.getfromin(self.bot, ctx, "mem", member)
+        member = formatting.get_from_in(self.bot, ctx, "mem", member)
         verified = ctx.guild.get_role(settings.VERIFIED_ROLE_ID)
         staff = ctx.guild.get_role(settings.STAFF_ROLE_ID)
 
@@ -390,7 +390,7 @@ class Admin(commands.Cog):
     @commands.command(help='Staff only: (channel) (# of posts)')
     @commands.has_role(settings.STAFF_ROLE_ID)
     async def cleanuproles_channel(self, ctx, channel, num):
-        channel = formatting.getfromin(self.bot, ctx, "cha", channel)
+        channel = formatting.get_from_in(self.bot, ctx, "cha", channel)
 
         async for message in channel.history(limit=int(num)):
             await Admin.cleanUpBlock(self, ctx, message.id, channel)
@@ -399,7 +399,7 @@ class Admin(commands.Cog):
     @commands.command(help='Staff only: (channel) (message)')
     @commands.has_role(settings.STAFF_ROLE_ID)
     async def cleanuproles_message(self, ctx, channel, message):
-        channel = formatting.getfromin(self.bot, ctx, "cha", channel)
+        channel = formatting.get_from_in(self.bot, ctx, "cha", channel)
 
         await Admin.cleanUpBlock(self, ctx, message, channel)
         

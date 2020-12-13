@@ -26,7 +26,7 @@ class Fun(commands.Cog):
     #@commands.has_role(VERIFIED_ROLE_ID) #this breaks the dm-aspect of the game
     async def rps(self, ctx, state, *, selection=None):
         if state.lower() == 'start' and self.rps_state == 0:
-            self.rps2 = formatting.getfromin(self.bot, ctx, "mem", selection)
+            self.rps2 = formatting.get_from_in(self.bot, ctx, "mem", selection)
 
             self.rps1 = ctx.message.author
             self.rps_state = 1
@@ -127,11 +127,11 @@ class Fun(commands.Cog):
     @commands.command(help='(user)')
     @commands.has_role(settings.VERIFIED_ROLE_ID)
     async def ship(self, ctx, target1, target2=None):
-        member2 = formatting.getfromin(self.bot, ctx, "mem", target1)
+        member2 = formatting.get_from_in(self.bot, ctx, "mem", target1)
 
         #checking to see if author is implied as a target
         if target2:
-            member1 = formatting.getfromin(self.bot, ctx, "mem", target2)
+            member1 = formatting.get_from_in(self.bot, ctx, "mem", target2)
 
         else:
             member1 = ctx.author
@@ -144,7 +144,7 @@ class Fun(commands.Cog):
         bars_off = (10-bars_ref)*'<a:baroff:725816609176027635>'
         status = None
 
-        #this seems sloppy, I think there's a better way to do this
+        #this seems sloppy, I think there's a better way to do this. Fixed by using if elif.
         while True:
             if comp_num == 100:
                 status = 'You\'re made for eachother <a:true_love:725827494585827481>'
@@ -240,7 +240,7 @@ class Fun(commands.Cog):
     @commands.is_owner()
     async def deathbattle(self, ctx, *, target):
         try:
-            member2_name = formatting.getfromin(self.bot, ctx, "mem", target)
+            member2_name = formatting.get_from_in(self.bot, ctx, "mem", target)
         except TypeError:
             member2_name = target   
         member1_name = ctx.author.name

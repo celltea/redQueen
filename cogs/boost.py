@@ -17,10 +17,10 @@ class Boost(commands.Cog):
     @commands.has_role(settings.VERIFIED_ROLE_ID)
     @commands.check_any(commands.has_role(settings.BOOSTER_ROLE_ID), commands.has_role(settings.STAFF_ROLE_ID))
     async def say(self, ctx, channel, *, msg):
-        channel = formatting.getfromin(self.bot, ctx, "cha", channel)
+        channel = formatting.get_from_in(self.bot, ctx, "cha", channel)
         log_channel = self.bot.get_channel(int(settings.SAY_LOG_ID))
 
-        if ctx.author.permissions_in(channel).send_messages and len(ctx.message.role_mentions) == 0 or '@everyone' not in msg or '@here' not in msg: #checking if there are any mentions in the message:
+        if ctx.author.permissions_in(channel).send_messages:
             if len(ctx.message.role_mentions) != 0 or '@everyone' in msg or '@here' in msg: #checking if there are any mentions in the message
                 await ctx.send(content='You cannot mention roles with this command')
                 return
@@ -158,7 +158,7 @@ class Boost(commands.Cog):
     @boost.command(help='Booster only: (emote)')
     async def emote(self, ctx, emote):
         try:
-            emote = formatting.getfromin(self.bot, ctx, "emo", emote)
+            emote = formatting.get_from_in(self.bot, ctx, "emo", emote)
         except TypeError:
             await ctx.send(content='Please select an emote from this server')   
             return

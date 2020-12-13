@@ -16,7 +16,7 @@ class Info(commands.Cog):
     @commands.command(aliases=['userinfo'], help='(member)')
     @commands.has_role(settings.VERIFIED_ROLE_ID)
     async def memberinfo(self, ctx, member):
-        member = formatting.getfromin(self.bot, ctx, "mem", member)
+        member = formatting.get_from_in(self.bot, ctx, "mem", member)
         now = datetime.utcnow()
 
         db = TinyDB(settings.DB_PATH + str(member.id) + '.json')
@@ -60,7 +60,7 @@ class Info(commands.Cog):
     @commands.command(help='(role)')
     @commands.has_role(settings.VERIFIED_ROLE_ID)
     async def howmany(self, ctx, role):
-        role = formatting.getfromin(self.bot, ctx, "rol", role)
+        role = formatting.get_from_in(self.bot, ctx, "rol", role)
 
         i = 0
 
@@ -79,7 +79,7 @@ class Info(commands.Cog):
     @commands.command(help='(role)')
     @commands.has_role(settings.VERIFIED_ROLE_ID)
     async def whoin(self, ctx, role):
-        role = formatting.getfromin(self.bot, ctx, "rol", role)
+        role = formatting.get_from_in(self.bot, ctx, "rol", role)
         members = ''
 
         for member in role.members:
@@ -100,7 +100,7 @@ class Info(commands.Cog):
     @commands.command(aliases=['av', 'pfp'], help='(user)')
     @commands.has_role(settings.VERIFIED_ROLE_ID)
     async def avatar(self, ctx, user):
-        user = formatting.getfromin(self.bot, ctx, "use", user)
+        user = formatting.get_from_in(self.bot, ctx, "use", user)
 
         embed = discord.Embed(title='Avatar', color=0x64b4ff)
         embed.set_author(name=f'{user.name}#{user.discriminator}', icon_url=user.avatar_url)
