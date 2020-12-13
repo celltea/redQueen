@@ -64,11 +64,11 @@ class Events(commands.Cog):
 
     
     @commands.command(help='Staff only: (member)')
-    @commands.has_permissions(administrator=True)
+    @commands.check_any(commands.has_role(settings.INTERVIEWER_ROLE_ID), commands.has_role(settings.STAFF_ROLE_ID), commands.has_role(settings.MARINATED_ROLE_ID))
     async def pardon(self, ctx, member):
-        member = formatting.getfromin(self.bot, ctx, 'mem', member)
+        member = formatting.get_from_in(self.bot, ctx, 'mem', member)
         try:
-            self.warnings[0].remove(member.id)
+            self.warnings.remove(member.id)
         except ValueError: #They gotta be in one of the arrays if we're at this point in the code.
             pass
         embed = discord.Embed(description=f'**{member.mention} has had their warnings removed**', color=0x64ff64)
@@ -125,26 +125,28 @@ class Events(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_join(self, member):
-        await Events.log_block(self, member)
-        await Events.role_block(self, member)
-        await Events.ban_toggle(self, member)
+        if member.guild.id == settings.GUILD_ID:
+            await Events.log_block(self, member)
+            await Events.role_block(self, member)
+            await Events.ban_toggle(self, member)
     
 
     @commands.Cog.listener()
     async def on_member_remove(self, member):
-        channel = self.bot.get_channel(settings.TURNOVER_CHANNEL_ID)
+        if member.guild.id == settings.GUILD_ID:
+            channel = self.bot.get_channel(settings.TURNOVER_CHANNEL_ID)
 
-        await channel.send(f':heart: **__Left:__** {member.mention} aka *{member.name}#{member.discriminator}* __\'{member.id}\'__') 
+            await channel.send(f':heart: **__Left:__** {member.mention} aka *{member.name}#{member.discriminator}* __\'{member.id}\'__') 
 
-        try: 
-            self.members.pop(self.members.index(member.id))
-        except ValueError:
-            pass
+            try: 
+                self.members.pop(self.members.index(member.id))
+            except ValueError:
+                pass
 
-        try:
-            os.remove(settings.DB_PATH + str(member.id) + '.json')
-        except OSError:
-            pass
+            try:
+                os.remove(settings.DB_PATH + str(member.id) + '.json') #for later, prune the booster role
+            except OSError:
+                pass
 
     
     async def chat_warn(self, message, reason, ban=False):
@@ -281,7 +283,6 @@ class Events(commands.Cog):
     async def unv_upd(self, before, after):
         timestamp_now = datetime.utcnow()
         await Events.global_assignment(self)
-        #checking when zira removes the joiner role to send the welcome message
         if self.unverified_role not in before.roles and self.joiner_role in before.roles and self.unverified_role in after.roles:
             channel = self.bot.get_channel(settings.WELCOME_CHANNEL_ID)
             staff_role = self.guild.get_role(settings.STAFF_ROLE_ID)
@@ -378,8 +379,8 @@ class Events(commands.Cog):
             else:
                 content = after.content
             self.embed_log.add_field(name='After', value=after.content)
-            self.embed_log.clear_fields()
             await self.log_channel.send(embed=self.embed_log)
+            self.embed_log.clear_fields()
 
 
     @commands.Cog.listener()
