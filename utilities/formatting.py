@@ -11,7 +11,7 @@ settings = settings.config("settings.json")
 allowed_char = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ "
 trans_table = {49 : 105, 51 : 101, 52 : 97, 53 : 115, 55 : 116, 56 : 98, 48 : 111}
 
-def getfromin(bot, ctx, mode, inp): #Really wishing python had switch cases.
+def get_from_in(bot, ctx, mode, inp): #Really wishing python had switch cases.
     if mode == 'use':
         try:
             out = bot.get_user(int(inp))
@@ -55,6 +55,8 @@ def simplify(string):
                 out = out[0:-1] + char
             else: 
                 out = out + char
+    if out[-1] == "s":
+        out = out[:-1]
     return out.lower().translate(trans_table)
 
 def fancify(fname):
