@@ -91,7 +91,9 @@ class Events(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         print(f'{self.bot.user.name} has connected succesfully!')
-        await Events.periodic_push(self)
+        game = discord.Game(name="with the server settings")
+        await self.bot.change_presence(activity=game)
+        await Events.periodic_push(self) #Should always be the last line of on_ready
 
 
     async def log_block(self, member):
@@ -157,8 +159,16 @@ class Events(commands.Cog):
             ban = True
         else:
             self.warnings.append(author.id)
-            
-        embed = discord.Embed(description=f'You have been warned for your previous message {author.mention}', color=0xfefefe)
+
+        if ban:
+            await author.ban(delete_message_days=0)
+            embed = discord.Embed(description=f'{author.mention} has been banned for this message', color=0xff6464)
+            try:
+                self.warnings.remove(author.id)
+            except ValueError:
+                pass
+        else:
+            embed = discord.Embed(description=f'You have been warned for your previous message {author.mention}', color=0xfefefe)
         embed.set_author(name=f'{author.name}{author.discriminator}', icon_url=author.avatar_url)
         await message.channel.send(embed=embed)
 
@@ -169,13 +179,6 @@ class Events(commands.Cog):
 
         await message.delete()
 
-        if ban:
-            await author.ban(delete_message_days=0)
-            try:
-                self.warnings.remove(author.id)
-            except ValueError:
-                pass
-
     async def link_warn(self, message, urls, ban=False):
         await Events.global_assignment(self)
         author = message.author
@@ -184,8 +187,16 @@ class Events(commands.Cog):
             ban = True
         else:
             self.warnings.append(author.id)
-            
-        embed = discord.Embed(description=f'You have been warned for your previous message {author.mention}', color=0xfefefe)
+
+        if ban:
+            await author.ban(delete_message_days=0)
+            embed = discord.Embed(description=f'{author.mention} has been banned for this message', color=0xff6464)
+            try:
+                self.warnings.remove(author.id)
+            except ValueError:
+                pass
+        else:   
+            embed = discord.Embed(description=f'You have been warned for your previous message {author.mention}', color=0xfefefe)
         embed.set_author(name=f'{author.name}{author.discriminator}', icon_url=author.avatar_url)
         await message.channel.send(embed=embed)
 
@@ -204,13 +215,6 @@ class Events(commands.Cog):
 
         await self.log_channel.send(embed=self.embed_log)
         self.embed_log.clear_fields()
-
-        if ban:
-            await author.ban(delete_message_days=0)
-            try:
-                self.warnings.remove(author.id)
-            except ValueError:
-                pass     
 
 
     async def chat_filter(self, message):
@@ -266,18 +270,32 @@ class Events(commands.Cog):
                 except discord.errors.InvalidArgument:
                     await message.author.create_dm()
                     await message.author.dm_channel.send(content=f'Your custom booster emote has been removed, please choose a new one using ```,boost emote (emote)```')
+
+
+    async def dm_forward(self, message):
+        if message.author.id != settings.OWNER_ID:
+            owner = self.bot.get_user(settings.OWNER_ID)
+            await owner.create_dm()
+            try:
+                await owner.dm_channel.send(f"**-**Direct Message from __'{message.author.id}'__\n**{message.author.name}#{message.author.discriminator}**: {message.content}")
+            except discord.HTTPException:
+                contents = message.content[0:-300] + "..."
+                await owner.dm_channel.send(f"**-**Direct Message from __'{message.author.id}'__\n**{message.author.name}#{message.author.discriminator}**: {contents}")
             
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        if message.guild.id == settings.GUILD_ID and  message.author.id != self.bot.user.id:
-            await Events.chat_filter(self, message)
-            await Events.disboard_onm(self, message)
-            await Events.activity_upd(self, message)
-            try:
-                await Events.boost_onm(self, message)
-            except: 
-                pass
+        if not message.author.bot:
+            if message.guild:
+                await Events.chat_filter(self, message)
+                await Events.disboard_onm(self, message)
+                await Events.activity_upd(self, message)
+                try:
+                    await Events.boost_onm(self, message)
+                except: 
+                    pass
+            else:
+                await Events.dm_forward(self, message)
 
 
     async def unv_upd(self, before, after):
@@ -386,7 +404,7 @@ class Events(commands.Cog):
     @commands.Cog.listener()
     async def on_message_delete(self, message):
 
-        if self.unverified_role in message.author.roles:
+        if self.verified_role not in message.author.roles and message.guild.id == settings.GUILD_ID:
 
             async for entry in self.guild.audit_logs(limit=1):
                 latest_audit = entry
