@@ -402,6 +402,18 @@ class Admin(commands.Cog):
         channel = formatting.get_from_in(self.bot, ctx, "cha", channel)
 
         await Admin.cleanUpBlock(self, ctx, message, channel)
+
+    
+    @commands.command(help='Owner only: (user) (message)')
+    @commands.is_owner()
+    async def say_dm(self, ctx, user, *, message):
+        user = formatting.get_from_in(self.bot, ctx, "use", user)
+
+        await user.create_dm()
+        try:
+            await user.dm_channel.send(message)
+        except discord.Forbidden:
+            await ctx.send('I cannot send messages to this user')
         
 
 def setup(bot):
