@@ -169,7 +169,7 @@ class Events(commands.Cog):
                 pass
         else:
             embed = discord.Embed(description=f'You have been warned for your previous message {author.mention}', color=0xfefefe)
-        embed.set_author(name=f'{author.name}{author.discriminator}', icon_url=author.avatar_url)
+        embed.set_author(name=f'{author.name}#{author.discriminator}', icon_url=author.avatar_url)
         await message.channel.send(embed=embed)
 
         await Events.embed_log_edit(self, 0xeeee30, message.author, reason)
@@ -197,11 +197,10 @@ class Events(commands.Cog):
                 pass
         else:   
             embed = discord.Embed(description=f'You have been warned for your previous message {author.mention}', color=0xfefefe)
-        embed.set_author(name=f'{author.name}{author.discriminator}', icon_url=author.avatar_url)
+        embed.set_author(name=f'{author.name}#{author.discriminator}', icon_url=author.avatar_url)
         await message.channel.send(embed=embed)
 
         await Events.embed_log_edit(self, 0xeeee30, message.author, "Message contains link")
-        await message.delete()
         i = 1
         obv_url = True
         for url in urls:
@@ -214,6 +213,7 @@ class Events(commands.Cog):
             self.embed_log.set_footer(text='WARNING: LINK MAY BE MALICIOUS', icon_url='https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/twitter/259/exclamation-mark_2757.png')
 
         await self.log_channel.send(embed=self.embed_log)
+        await message.delete()
         self.embed_log.clear_fields()
 
 
@@ -290,12 +290,13 @@ class Events(commands.Cog):
                 await Events.chat_filter(self, message)
                 await Events.disboard_onm(self, message)
                 await Events.activity_upd(self, message)
-                try:
-                    await Events.boost_onm(self, message)
-                except: 
-                    pass
             else:
                 await Events.dm_forward(self, message)
+        else:
+            try:
+                await Events.boost_onm(self, message)
+            except: 
+                pass
 
 
     async def unv_upd(self, before, after):
@@ -404,7 +405,7 @@ class Events(commands.Cog):
     @commands.Cog.listener()
     async def on_message_delete(self, message):
 
-        if self.verified_role not in message.author.roles and message.guild.id == settings.GUILD_ID:
+        if self.verified_role not in message.author.roles and message.guild.id == settings.GUILD_ID and not message.author.bot:
 
             async for entry in self.guild.audit_logs(limit=1):
                 latest_audit = entry
