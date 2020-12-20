@@ -303,5 +303,55 @@ class Fun(commands.Cog):
         await ctx.send(content=sO)
 
 
+    @commands.command(aliases=['8-ball', '8ball', 'magic8ball'], help='no arg: requested by Annalina')
+    # @commands.has_role(settings.VERIFIED_ROLE_ID)
+    @commands.is_owner()
+    async def magic8(self, ctx, *, string):
+        print(ctx.message.content.lower())
+        if 'server owner' in string.lower() or 'serverowner' in string.lower():
+            out = 'Do __**NOT**__ ask who owns the server.'
+
+        elif 'love' in string.lower():
+            out = 'I am incapable of understanding love.'
+        
+        elif 'blue queen' in string.lower() or 'bluequeen' in string.lower():
+            out = 'Leave *her* out of this.'
+
+        elif ' ban' in string.lower() or ' banned' in string.lower():
+            out = '**Yes!**'
+
+        else:
+            responses = ['**ABSOLUTELY NOT**',
+            'As I see it, yes.', 
+            'Ask again later.',
+            'Better not tell you now.',
+            'Can you word your question better?',
+            'Cannot predict now.',
+            'Concentrate and ask again.',
+            'Do not count on it.',
+            'If I say yes will you stop asking?',
+            'It is certain.',
+            'It is decidedly so.',
+            'Most likely.',
+            'My reply is no.',
+            'My sources say no.',
+            'Outlook not so good.',
+            'Outlook good.',
+            'Reply hazy, try again.',
+            'Signs point to yes.',
+            'Sure, why not...',
+            'Try asking in the waiting room',
+            'Very doubtful.',
+            'Without a doubt.',
+            'Yeeaaa... No.',
+            'Yes.',
+            'Yes – definitely.',
+            'You cannot handle the truth',
+            'You may rely on it.']
+            seed = randint(0, len(responses)-1)
+            out = '🎱 ' + responses[seed]
+        await ctx.send(out)
+
+
 def setup(bot):
     bot.add_cog(Fun(bot))
