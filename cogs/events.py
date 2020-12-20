@@ -285,18 +285,17 @@ class Events(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        if not message.author.bot:
-            if message.guild:
-                await Events.chat_filter(self, message)
-                await Events.disboard_onm(self, message)
-                await Events.activity_upd(self, message)
-            else:
-                await Events.dm_forward(self, message)
-        else:
+        if message.guild:
+            await Events.chat_filter(self, message)
+            await Events.disboard_onm(self, message)
+            await Events.activity_upd(self, message)
             try:
                 await Events.boost_onm(self, message)
             except: 
                 pass
+        else:
+            if not message.author.bot:
+                await Events.dm_forward(self, message)
 
 
     async def unv_upd(self, before, after):
