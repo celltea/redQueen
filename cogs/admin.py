@@ -414,6 +414,9 @@ class Admin(commands.Cog):
             await user.dm_channel.send(message)
         except discord.Forbidden:
             await ctx.send('I cannot send messages to this user')
+            
+        emote = self.bot.get_emoji(790040369400250388)
+        await ctx.message.add_reaction(emote)
         
 
 def setup(bot):
